@@ -1,18 +1,11 @@
 {
   "name": "antd-component",
   "version": "0.0.1",
-  "description": "> TODO: description",
+  "description": "json antd component serialize component",
   "author": "jxcao <jxcao@corp.netease.com>",
   "homepage": "",
   "license": "MIT",
   "main": "index.ts",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "lib"
-  ],
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1"
   }
