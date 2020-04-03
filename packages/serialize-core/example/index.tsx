@@ -12,7 +12,20 @@ function Page(props: any) {
     </div>
   );
 }
+class Tpl extends React.PureComponent<any, any> {
+  componentDidMount() {
+    console;
+  }
+  createMarkup() {
+    return { __html: this.props.tpl || '' };
+  }
+  render() {
+    return <div dangerouslySetInnerHTML={this.createMarkup()}></div>;
+  }
+}
 register('page', Page);
+register('tpl', Tpl);
+
 const schema = {
   type: 'page',
   DataSource: {
@@ -26,23 +39,14 @@ const schema = {
   },
   title: '${page.list.a}',
   content: {
-    type: 'layout',
-    children: [
-      {
-        type: 'header',
-        children: 'test',
-      },
-      {
-        type: 'content',
-        children: {
-          $type: 'button',
-          children: 'test button',
-          type: 'primary',
-        },
-      },
-    ],
+    type: 'tpl',
+    tpl: '${page|json}',
+    bindData: {
+      page: true,
+    },
   },
 };
+
 @hot
 class App extends React.PureComponent {
   state = {

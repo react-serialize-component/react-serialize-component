@@ -141,11 +141,7 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
     const { component: Com, schema } = this.props;
     const child = this.parseSchemaProps(schema.children, null);
     return (
-      <div
-        onClick={() => {
-          this.props.data.tpl.fetchList();
-        }}
-      >
+      <div>
         <ErrorBoundary type={schema.$type || schema.type}>
           <Com {...this.parseSchema(schema)}>{child}</Com>
         </ErrorBoundary>
