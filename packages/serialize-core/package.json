@@ -1,0 +1,17 @@
+{
+  "name": "serialize-core",
+  "version": "0.0.1",
+  "description": "write react by json serialize antd component",
+  "keywords": [
+    "JSON",
+    "react",
+    "components"
+  ],
+  "author": "jianxcao <jianxcao@126.com>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  }
+}

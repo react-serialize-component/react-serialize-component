@@ -1,0 +1,11 @@
+
+# Folders
+.idea/
+_gh_pages
+_site
+node_modules
+/dist
+/lib
+/sdk
+/gh-pages
+/.vscode

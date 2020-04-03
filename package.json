@@ -1,0 +1,20 @@
+{
+  "name": "react-serialize-component",
+  "version": "0.0.1",
+  "description": "write react by json serialize antd component",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "json",
+    "react",
+    "components"
+  ],
+  "author": "jianxcao",
+  "license": "MIT",
+  "devDependencies": {
+    "learn": "^0.1.5",
+    "lerna": "^3.15.0"
+  }
+}
