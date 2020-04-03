@@ -7,6 +7,9 @@
     "react",
     "components"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "jianxcao <jianxcao@126.com>",
   "homepage": "",
   "license": "MIT",
