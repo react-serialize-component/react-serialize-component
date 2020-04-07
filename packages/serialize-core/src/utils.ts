@@ -1,6 +1,7 @@
 import { PlainObject } from './types';
 import isPlainObject from 'lodash/isPlainObject';
-
+import isEmpty from 'lodash/isEmpty';
+import difference from 'lodash/difference';
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
 export const prettyBytes = (num: number) => {
@@ -27,6 +28,9 @@ export const prettyBytes = (num: number) => {
 
 export function anyChanged(pre: PlainObject, next: PlainObject) {
   const loopList = [[pre, next]];
+  if (isEmpty(pre) && isEmpty(next)) {
+    return false;
+  }
   while (loopList.length) {
     const [one, two] = loopList.pop() as Array<PlainObject>;
     const key1 = Object.keys(one);
@@ -42,7 +46,7 @@ export function anyChanged(pre: PlainObject, next: PlainObject) {
       return true;
     }
     // 对比key是否相同
-    if (key2.some(key => !key1Map[key])) {
+    if (key2.some((key) => !key1Map[key])) {
       return true;
     }
 
@@ -77,7 +81,7 @@ const entityMap: {
   '/': '&#x2F;',
 };
 export const escapeHtml = (str: string) =>
-  String(str).replace(/[&<>"'\/]/g, function(s) {
+  String(str).replace(/[&<>"'\/]/g, function (s) {
     return entityMap[s];
   });
 
@@ -101,4 +105,32 @@ export function isExpressionStr(str: string | null | undefined) {
 const isTemplateReg: RegExp = /(?:\${|<%|{{).+(?:}}|}|%>)/;
 export function isTplStr(str: string | null | undefined) {
   return str && isTemplateReg.test(str);
+}
+
+export function shallowEqualObjects(objA: any, objB: any, excludeKey: Array<string> = []) {
+  if (objA === objB) {
+    return true;
+  }
+
+  if (!objA || !objB) {
+    return false;
+  }
+
+  var aKeys = difference(Object.keys(objA), excludeKey);
+  var bKeys = difference(Object.keys(objB), excludeKey);
+  var len = aKeys.length;
+
+  if (bKeys.length !== len) {
+    return false;
+  }
+
+  for (var i = 0; i < len; i++) {
+    var key = aKeys[i];
+
+    if (objA[key] !== objB[key] || !Object.prototype.hasOwnProperty.call(objB, key)) {
+      return false;
+    }
+  }
+
+  return true;
 }

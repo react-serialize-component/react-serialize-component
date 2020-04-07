@@ -1,5 +1,5 @@
 import React from 'react';
-import { templateString, templateFun, Payload, anyFunc } from './types';
+import { templateString, templateFun, Payload, anyFunc, PlainObject } from './types';
 import { AxiosRequestConfig } from 'axios';
 import { anyChanged } from './utils';
 import isPlainObject from 'lodash/isPlainObject';
@@ -27,7 +27,7 @@ export function compareDataSource<T extends DataSources>(pre: T | null, next: T)
   }
   const result: DataSources = {};
   const nextKeys = Object.keys(next);
-  nextKeys.forEach(key => {
+  nextKeys.forEach((key) => {
     if (!pre[key]) {
       result[key] = next[key];
     } else {
@@ -85,7 +85,7 @@ export interface SchemaNode {
   DataSource: DataSources;
   // 绑定数据源
   bindData?: bindDataSource;
-  [propName: string]: bindDataSource | schemaNodeProps | undefined;
+  [propName: string]: bindDataSource | schemaNodeProps | anyFunc | undefined;
 }
 
 export type SchemaNodes = Array<SchemaNode>;
@@ -96,5 +96,5 @@ export interface SchemaRenderProps {
   // 通过Inject注入的组件
   component: any;
   // 全局环境设置
-  env: any;
+  env?: PlainObject;
 }

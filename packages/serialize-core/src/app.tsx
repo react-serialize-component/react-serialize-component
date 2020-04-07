@@ -8,9 +8,9 @@ import createDva, { Provider, dvaReduxConnectContext, connect, dvaIns, parseData
 import { Model } from 'dva-core';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
+import memoize from 'fast-memoize';
 import template from './art';
-import { isEventString } from './utils';
-
+import { isEventString, anyChanged, shallowEqualObjects } from './utils';
 export const componentSymobol = Symbol('schemaComponent');
 export const preDataSourcesSymobol = Symbol('preDataSources');
 
@@ -29,7 +29,7 @@ interface App {
   // 渲染schema的数
   render(SchemaNode: any): JSX.Element | null | undefined | false;
   // 初始化组件所用--注入store
-  injectData(opt: injectOpt): InjectConnect;
+  injectData(opt: string, Target: React.ComponentType): InjectConnect;
   [propName: string]: any;
 }
 
@@ -49,7 +49,7 @@ function isLikeSchemaNode(obj: any) {
   return false;
 }
 
-class ErrorBoundary extends React.Component<any, any> {
+class SchemaWrapper extends React.Component<any, any> {
   constructor(props: any) {
     super(props);
     this.state = { error: null, errorInfo: null };
@@ -78,12 +78,25 @@ class ErrorBoundary extends React.Component<any, any> {
 class SchemaRender extends React.Component<SchemaRenderProps, any> {
   static defaultProps: Partial<SchemaRenderProps> = {};
 
-  shouldComponentUpdate(nextProps: SchemaRenderProps, props: SchemaRenderProps) {
-    return true;
+  shouldComponentUpdate(nextProps: SchemaRenderProps) {
+    const props = this.props;
+    const res = anyChanged(props.data, nextProps.data) || nextProps.component !== props.component;
+    return res || !shallowEqualObjects(props.schema, nextProps.schema, ['bindData', 'DataSource']) || !shallowEqualObjects(props.env, nextProps.env);
   }
-  componentDidCatch(error: any, info: any) {
-    this.setState({ error, info });
+
+  componentDidMount() {
+    console.log('in component mount', this.props.schema.type);
+    const { schema } = this.props;
+    if (schema.onInit) {
+      const fn = this.parseSchemaProps(schema.onInit, 'onInit');
+      console.log('in thererer');
+      fn();
+    }
   }
+  componentWillUnmount() {
+    console.log('component unmount', this.props.schema.type);
+  }
+
   /**
    *
    * @param prop 要解析的字段
@@ -95,7 +108,7 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
     if (t === 'string' && prop !== '') {
       const fun = template.compile(prop as string);
       if (isEventString(key)) {
-        return function(e: any) {
+        return function (e: any) {
           fun({
             e,
             ...env,
@@ -123,13 +136,14 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   }
   parseSchema(schema: SchemaNode) {
     const { $type, type, children, ...node } = schema;
-    const excludeKey = ['DataSource', 'bindData'];
+    // 当前层的onInit在didMount处理
+    const excludeKey = ['DataSource', 'bindData', 'onInit'];
     const result: any = {};
     const keys = Object.keys(node);
     if (!type === null) {
       keys.push(type);
     }
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (!excludeKey.includes(key)) {
         result[key] = this.parseSchemaProps(schema[key], key);
       }
@@ -140,11 +154,12 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   render() {
     const { component: Com, schema } = this.props;
     const child = this.parseSchemaProps(schema.children, null);
+    const { onInit, ...schemaProps } = this.parseSchema(schema);
     return (
       <div>
-        <ErrorBoundary type={schema.$type || schema.type}>
-          <Com {...this.parseSchema(schema)}>{child}</Com>
-        </ErrorBoundary>
+        <SchemaWrapper type={schema.$type || schema.type}>
+          <Com {...schemaProps}>{child}</Com>
+        </SchemaWrapper>
       </div>
     );
   }
@@ -187,7 +202,7 @@ const app: App = {
     const node: SchemaNode = schemaNode as SchemaNode;
     return (
       <Provider store={dva.getStore()} context={dvaReduxConnectContext}>
-        <ErrorBoundary type={node.$type || node.type}>{app.initComponent(node)}</ErrorBoundary>
+        <SchemaWrapper type={node.$type || node.type}>{app.initComponent(node)}</SchemaWrapper>
       </Provider>
     );
   },
@@ -198,14 +213,14 @@ const app: App = {
       throw new Error('schema node type is required!');
     }
     app.injectModal(schemaNode);
-    const WraperSchema: any = app.injectData(schemaNode.bindData || {})(SchemaRender);
+    const ConnectSchema: any = app.injectData(JSON.stringify(schemaNode.bindData || {}), SchemaRender);
     const component = app[componentSymobol][type];
     if (!component) {
       throw new Error(`The ${type} component could not be found, Use the register method to register ${type} component`);
     }
     type = type.slice(0, 1).toUpperCase() + type.slice(1);
-    WraperSchema.displayName = type + 'Schema';
-    return <WraperSchema component={component} schema={schemaNode} />;
+    ConnectSchema.displayName = type + 'Schema';
+    return <ConnectSchema component={component} schema={schemaNode} />;
   },
   injectModal(schema: SchemaNode) {
     const nextDataSources = findDataSource(schema);
@@ -217,8 +232,8 @@ const app: App = {
     const keys: Array<string> = Object.keys(dataModels);
     const models = dva.getModels();
     app[preDataSourcesSymobol] = nextDataSources;
-    keys.forEach(key => {
-      const one = models.find(model => model.namespace === key);
+    keys.forEach((key) => {
+      const one = models.find((model) => model.namespace === key);
       // 当前model不存在就直接放进去, 否则替换
       if (!one) {
         dva.model(dataModels[key]);
@@ -231,102 +246,103 @@ const app: App = {
    * 负责将bindData中的定义的数据项目注入到组件当中
    * @param opt
    */
-  injectData(opt: bindDataSource) {
-    return (Target: React.ComponentType) => {
-      if (!opt || isEmpty(opt)) {
-        return Target;
-      }
-      const dataSourceKeys: Array<string> = Object.keys(opt);
-      return connect(
-        (state: any) => {
-          const data: { [dataSourceName: string]: any } = {};
-          dataSourceKeys.reduce((result, key) => {
-            if (state[key]) {
-              if (opt[key] === true) {
-                result[key] = state[key];
-              } else if (Array.isArray(opt[key])) {
-                const pickRes = pick(state[key], opt[key] as Array<string>);
-                if (pickRes && !isEmpty(pickRes)) {
-                  result[key] = pickRes;
-                }
+  injectData: memoize(function (this: any, options: string, Target: React.ComponentType) {
+    const opt: bindDataSource = JSON.parse(options);
+    if (!opt || isEmpty(opt)) {
+      return Target;
+    }
+    const key = JSON.stringify(opt);
+    const Com = connect(
+      (state: any) => {
+        const dataSourceKeys: Array<string> = Object.keys(opt);
+        const data: { [dataSourceName: string]: any } = {};
+        dataSourceKeys.reduce((result, key) => {
+          if (state[key]) {
+            if (opt[key] === true) {
+              result[key] = state[key];
+            } else if (Array.isArray(opt[key])) {
+              const pickRes = pick(state[key], opt[key] as Array<string>);
+              if (pickRes && !isEmpty(pickRes)) {
+                result[key] = pickRes;
               }
             }
-            return result;
-          }, data);
-          return {
-            data,
-          };
-        },
-        (dispatch: Dispatch) => {
-          // 获取所有数据源的名称
-          const dataSourceKeys = Object.keys(opt);
-          // 取出所有models
-          const models: Array<Model> = dva.getModels();
-          // 取出effects
-          const effects: { [namespace: string]: { [effectsMethod: string]: (payload: PlainObject) => any } } = {};
-          dataSourceKeys.reduce((results, namespace) => {
-            const current = models.find((one: Model) => one.namespace === namespace);
-            if (current) {
-              const effects: any = current.effects;
-              const reducers: any = current.reducers;
-              const namespaceMethod: PlainObject = {};
-              Object.keys(reducers).reduce((res, key) => {
-                let k: string = key.replace(namespace + '/', '');
-                res[k] = function(payload: any) {
-                  return dispatch({
-                    type: key,
-                    payload,
-                  });
-                };
-                return res;
-              }, namespaceMethod);
-              Object.keys(effects).reduce((res, key) => {
-                let k: string = key.replace(namespace + '/', '');
-                k = k.slice(0, 1).toUpperCase() + k.slice(1);
-                k = 'fetch' + k;
-                res[k] = function(payload: any) {
-                  return dispatch({
-                    type: key,
-                    payload,
-                  });
-                };
-                return res;
-              }, namespaceMethod);
-              results[namespace] = namespaceMethod;
-            }
-            return results;
-          }, effects);
-          return {
-            effects,
-          };
-        },
-        (stateProps: any, dispatchProps: any, ownProps: any) => {
-          const { data, ...otherState } = stateProps;
-          const { effects, ...otherDispatch } = dispatchProps;
-          const keys = Object.keys(data);
-          keys.map(key => {
-            data[key] = Object.assign(data[key], effects[key]);
-          });
-          return {
-            data,
-            ...otherDispatch,
-            ...otherState,
-            ...ownProps,
-          };
-        },
-        {
-          forwardRef: true,
-          context: dvaReduxConnectContext,
-        }
-      )(Target);
-    };
-  },
+          }
+          return result;
+        }, data);
+        return {
+          data,
+        };
+      },
+      (dispatch: Dispatch) => {
+        // 获取所有数据源的名称
+        const dataSourceKeys = Object.keys(opt);
+        // 取出所有models
+        const models: Array<Model> = dva.getModels();
+        // 取出effects
+        const effects: { [namespace: string]: { [effectsMethod: string]: (payload: PlainObject) => any } } = {};
+        dataSourceKeys.reduce((results, namespace) => {
+          const current = models.find((one: Model) => one.namespace === namespace);
+          if (current) {
+            const effects: any = current.effects;
+            const reducers: any = current.reducers;
+            const namespaceMethod: PlainObject = {};
+            Object.keys(reducers).reduce((res, key) => {
+              let k: string = key.replace(namespace + '/', '');
+              res[k] = function (payload: any) {
+                return dispatch({
+                  type: key,
+                  payload,
+                });
+              };
+              return res;
+            }, namespaceMethod);
+            Object.keys(effects).reduce((res, key) => {
+              let k: string = key.replace(namespace + '/', '');
+              k = k.slice(0, 1).toUpperCase() + k.slice(1);
+              k = 'fetch' + k;
+              res[k] = function (payload: any) {
+                return dispatch({
+                  type: key,
+                  payload,
+                });
+              };
+              return res;
+            }, namespaceMethod);
+            results[namespace] = namespaceMethod;
+          }
+          return results;
+        }, effects);
+        return {
+          effects,
+        };
+      },
+      (stateProps: any, dispatchProps: any, ownProps: any) => {
+        const { data, ...otherState } = stateProps;
+        const { effects, ...otherDispatch } = dispatchProps;
+        const keys = Object.keys(data);
+        keys.map((key) => {
+          data[key] = Object.assign({}, data[key], effects[key]);
+        });
+        return {
+          data,
+          ...otherDispatch,
+          ...otherState,
+          ...ownProps,
+        };
+      },
+      {
+        forwardRef: true,
+        context: dvaReduxConnectContext,
+      }
+    )(Target);
+    return Com;
+  }) as { (opt: string, Target: React.ComponentType): InjectConnect },
 };
 
-['register', 'unRegister', 'render', 'injectData'].map(key => {
+['register', 'unRegister', 'render', 'injectData'].map((key) => {
   app[key] = app[key].bind(app);
 });
 
 export default app;
 
-export const { register, unRegister, render, injectData } = app;
+export const { register, unRegister, render, injectData, getData } = app;

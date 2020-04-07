@@ -11,6 +11,7 @@ import { PlainObject } from './types';
 import { isExpressionStr, isTplStr } from './utils';
 import isPlainObject from 'lodash/isPlainObject';
 import axios from 'axios';
+import isEmpty from 'lodash/isEmpty';
 
 (window as any).template = template;
 const overwriteMerge = (destinationArray: Array<any>, sourceArray: Array<any>, options: PlainObject) => sourceArray;
@@ -117,7 +118,6 @@ export function parseDataSource(dataSources: DataSources): Models {
             ...(state[namespace] || {}),
           });
         }
-        console.log(1111, result);
         return result;
       }
       if (!data[key]) {
@@ -138,7 +138,6 @@ export function parseDataSource(dataSources: DataSources): Models {
       };
       return res;
     }, effects);
-
     const model: Model = {
       namespace: namespace,
       state: data,
@@ -147,7 +146,17 @@ export function parseDataSource(dataSources: DataSources): Models {
           if (!payload) {
             return state;
           }
-          return merge(state, payload as any, { arrayMerge: overwriteMerge });
+          const keys = Object.keys(payload);
+          const newState = { ...state };
+          return keys.reduce((result, key, index) => {
+            console.log(result, key);
+            if (!state[key] || isEmpty(state[key])) {
+              result[key] = payload[key];
+            } else {
+              result[key] = merge(state[key], payload[key] as any, { arrayMerge: overwriteMerge });
+            }
+            return result;
+          }, newState);
         },
       },
       effects,

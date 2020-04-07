@@ -24,7 +24,8 @@
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "react-redux": "^7.0.2",
-    "redux": "^4.0.5"
+    "redux": "^4.0.5",
+    "shallow-equal": "^1.2.1"
   },
   "peerDependencies": {
     "react": ">=16.0.0",

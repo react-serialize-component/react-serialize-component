@@ -12,6 +12,10 @@ function Page(props: any) {
     </div>
   );
 }
+
+function Content(props: any) {
+  return <div>{props.children}</div>;
+}
 class Tpl extends React.PureComponent<any, any> {
   componentDidMount() {
     console;
@@ -25,6 +29,20 @@ class Tpl extends React.PureComponent<any, any> {
 }
 register('page', Page);
 register('tpl', Tpl);
+register('content', Content);
+
+// Object.keys(antd).forEach(key => {
+//   const name = key.slice(0, 1).toLowerCase() + key.slice(1);
+//   register(name, (antd as any)[key]);
+// });
+// const { Header, Content, Footer, Sider } = antd.Layout;
+// register('header', Header);
+// register('content', Content);
+// register('footer', Footer);
+// register('sider', Sider);
+
+// import * as antd from 'antd';
+// import 'antd/dist/antd.css';
 
 const schema = {
   type: 'page',
@@ -37,12 +55,19 @@ const schema = {
     page: true,
     tpl: ['list'],
   },
-  title: '${page.list.a}',
+  title: 'abc',
   content: {
-    type: 'tpl',
-    tpl: '${page|json}',
+    type: 'content',
     bindData: {
       page: true,
+    },
+    children: {
+      type: 'tpl',
+      tpl: '${page|json}',
+      onInit: '${page.fetchList()}',
+      bindData: {
+        page: true,
+      },
     },
   },
 };

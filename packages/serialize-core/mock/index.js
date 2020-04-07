@@ -6,6 +6,7 @@ module.exports = {
       data: {
         a: 1,
         b: 2,
+        date: +new Date(),
       },
     };
     res.json(data);
