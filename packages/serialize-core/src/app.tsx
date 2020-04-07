@@ -244,14 +244,14 @@ const app: App = {
   },
   /**
    * 负责将bindData中的定义的数据项目注入到组件当中
-   * @param opt
+   * @param opt: bindDataSource string
+   * 这里为了防止绑定数据时候的对象发生变化，所以讲 bindData转换成string，然后用memoize缓存，通过这个方法减少组件重绘次数
    */
   injectData: memoize(function (this: any, options: string, Target: React.ComponentType) {
     const opt: bindDataSource = JSON.parse(options);
     if (!opt || isEmpty(opt)) {
       return Target;
     }
-    const key = JSON.stringify(opt);
     const Com = connect(
       (state: any) => {
         const dataSourceKeys: Array<string> = Object.keys(opt);
