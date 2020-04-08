@@ -4,7 +4,7 @@
 _gh_pages
 _site
 node_modules
-/dist
+dist
 /lib
 /sdk
 /gh-pages

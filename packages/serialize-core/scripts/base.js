@@ -1,7 +1,7 @@
 const path = require('path');
 // development production
 const env = process.env.NODE_ENV;
-const mode = env === 'prod' ? 'production' : 'development';
+const mode = env === 'production' ? 'production' : 'development';
 const context = path.resolve(__dirname, '../');
 module.exports = {
   mode,
