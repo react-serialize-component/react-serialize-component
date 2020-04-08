@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
 import { PlainObject, Payload } from '../types';
+import { detailReq, detailRes } from '../env';
 import './axiosStatus';
 // const urlTest = /(?:https*:)*\/\/([^/]+)/;
 interface AxiosConfig extends AxiosRequestConfig {
@@ -54,7 +55,12 @@ const detailLockKey = (config: any, promise: Promise<any>) => {
 
 // 添加时间戳
 axios.interceptors.request.use(
-  function(config) {
+  function (config) {
+    try {
+      config = detailReq(config);
+    } catch (e) {
+      console.error(e);
+    }
     const params = config.params || {};
     let headers = config.headers || {};
     params._t = +new Date();
@@ -62,7 +68,7 @@ axios.interceptors.request.use(
     config.headers = headers;
     return config;
   },
-  function(error) {
+  function (error) {
     const errCode = (axios.defaults as AxiosConfig).errCode;
     return Promise.reject({
       code: errCode.err.code,
@@ -72,10 +78,15 @@ axios.interceptors.request.use(
 );
 
 axios.interceptors.response.use(
-  function(res: AxiosResponse<Payload>): any {
+  function (res: AxiosResponse<Payload>): any {
     const errCode = (axios.defaults as AxiosConfig).errCode;
-    const data = res.data;
+    let data = res.data;
     const status = res.status;
+    try {
+      data = detailRes(res.config.url || '', data);
+    } catch (error) {
+      console.error(error);
+    }
     // 将statusCode放上
     if (typeof data === 'object') {
       data.status = status;
@@ -101,7 +112,7 @@ axios.interceptors.response.use(
       message: errCode.err.message,
     };
   },
-  function(err: AxiosError) {
+  function (err: AxiosError) {
     const errCode = (axios.defaults as AxiosConfig).errCode;
     if (axios.isCancel(err)) {
       return {
@@ -146,7 +157,7 @@ const req = Axios.prototype.request;
 /**
  * 覆盖全局request的方法，方便处理异常出现的情况
  */
-Axios.prototype.request = function(config: any) {
+Axios.prototype.request = function (config: any) {
   if (config.lockKey) {
     const source = CancelToken.source();
     config.source = source;

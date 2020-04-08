@@ -11,11 +11,9 @@ import isPlainObject from 'lodash/isPlainObject';
 import memoize from 'fast-memoize';
 import template from './art';
 import { isEventString, anyChanged, shallowEqualObjects } from './utils';
+import { env } from './env';
 export const componentSymobol = Symbol('schemaComponent');
 export const preDataSourcesSymobol = Symbol('preDataSources');
-
-interface injectOpt {}
-
 interface InjectConnect {
   (target: React.ComponentType): React.ComponentType | null | undefined;
 }
@@ -29,7 +27,7 @@ interface App {
   // 渲染schema的数
   render(SchemaNode: any): JSX.Element | null | undefined | false;
   // 初始化组件所用--注入store
-  injectData(opt: string, Target: React.ComponentType): InjectConnect;
+  injectData(opt: bindDataSource): InjectConnect;
   [propName: string]: any;
 }
 
@@ -76,7 +74,9 @@ class SchemaWrapper extends React.Component<any, any> {
 }
 
 class SchemaRender extends React.Component<SchemaRenderProps, any> {
-  static defaultProps: Partial<SchemaRenderProps> = {};
+  static defaultProps: Partial<SchemaRenderProps> = {
+    data: {},
+  };
 
   shouldComponentUpdate(nextProps: SchemaRenderProps) {
     const props = this.props;
@@ -85,16 +85,12 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   }
 
   componentDidMount() {
-    console.log('in component mount', this.props.schema.type);
     const { schema } = this.props;
+    // console.log('in mount', schema.type);
     if (schema.onInit) {
       const fn = this.parseSchemaProps(schema.onInit, 'onInit');
-      console.log('in thererer');
       fn();
     }
-  }
-  componentWillUnmount() {
-    console.log('component unmount', this.props.schema.type);
   }
 
   /**
@@ -111,23 +107,26 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
         return function (e: any) {
           fun({
             e,
+            env,
+            data,
             ...env,
             ...data,
-            data,
           });
         };
       }
       return fun({
-        ...env,
+        env,
         data,
+        ...env,
         ...data,
       });
     } else if (t === 'object' && isLikeSchemaNode(prop)) {
       return app.initComponent(prop as SchemaNode);
     } else if (Array.isArray(prop)) {
       // 数组的情况
-      return (prop as Array<any>).map((one: any) => {
-        return this.parseSchemaProps(one, null);
+      return (prop as Array<any>).map((one: any, index) => {
+        const res = this.parseSchemaProps(one, null);
+        return React.isValidElement(res) ? <React.Fragment key={index}>{res}</React.Fragment> : res;
       });
     } else {
       // 函数，数字，null， undefined都不动
@@ -206,21 +205,22 @@ const app: App = {
       </Provider>
     );
   },
-  initComponent(schemaNode: SchemaNode) {
+  initComponent(schemaNode: SchemaNode, otherProps: PlainObject = {}) {
+    // console.log('in ini component', (module as any).hot);
     // 进入该这个方法意味着一定是个schema的组件
     let type: any = schemaNode.$type || schemaNode.type;
     if (!type) {
       throw new Error('schema node type is required!');
     }
     app.injectModal(schemaNode);
-    const ConnectSchema: any = app.injectData(JSON.stringify(schemaNode.bindData || {}), SchemaRender);
+    const ConnectSchema: any = app.injectData(schemaNode.bindData || {});
     const component = app[componentSymobol][type];
     if (!component) {
       throw new Error(`The ${type} component could not be found, Use the register method to register ${type} component`);
     }
     type = type.slice(0, 1).toUpperCase() + type.slice(1);
     ConnectSchema.displayName = type + 'Schema';
-    return <ConnectSchema component={component} schema={schemaNode} />;
+    return <ConnectSchema component={component} schema={schemaNode} env={env} {...otherProps} />;
   },
   injectModal(schema: SchemaNode) {
     const nextDataSources = findDataSource(schema);
@@ -247,10 +247,9 @@ const app: App = {
    * @param opt: bindDataSource string
    * 这里为了防止绑定数据时候的对象发生变化，所以讲 bindData转换成string，然后用memoize缓存，通过这个方法减少组件重绘次数
    */
-  injectData: memoize(function (this: any, options: string, Target: React.ComponentType) {
-    const opt: bindDataSource = JSON.parse(options);
+  injectData: memoize(function (opt: bindDataSource) {
     if (!opt || isEmpty(opt)) {
-      return Target;
+      return SchemaRender;
     }
     const Com = connect(
       (state: any) => {
@@ -334,9 +333,9 @@ const app: App = {
         forwardRef: true,
         context: dvaReduxConnectContext,
       }
-    )(Target);
+    )(SchemaRender);
     return Com;
-  }) as { (opt: string, Target: React.ComponentType): InjectConnect },
+  }) as { (opt: bindDataSource): InjectConnect },
 };
 
 ['register', 'unRegister', 'render', 'injectData'].map((key) => {

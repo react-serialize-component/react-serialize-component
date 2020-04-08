@@ -1,6 +1,6 @@
+import { hot } from 'react-hot-loader/root';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { hot } from 'react-hot-loader/root';
 import { render, register } from '../src/index';
 import '../src/utils';
 
@@ -14,7 +14,8 @@ function Page(props: any) {
 }
 
 function Content(props: any) {
-  return <div>{props.children}</div>;
+  const { children, ...other } = props;
+  return <div {...other}>{children}</div>;
 }
 class Tpl extends React.PureComponent<any, any> {
   componentDidMount() {
@@ -55,20 +56,27 @@ const schema = {
     page: true,
     tpl: ['list'],
   },
-  title: 'abc',
+  title: 'abc0',
   content: {
     type: 'content',
     bindData: {
       page: true,
     },
-    children: {
-      type: 'tpl',
-      tpl: '${page|json}',
-      onInit: '${page.fetchList()}',
-      bindData: {
-        page: true,
+    children: [
+      {
+        type: 'tpl',
+        tpl: '${page|json}',
+        onInit: '${page.fetchList()}',
+        bindData: {
+          page: true,
+        },
       },
-    },
+      {
+        type: 'content',
+        onClick: '${env.alert("abc")}',
+        children: 'abc',
+      },
+    ],
   },
 };
 

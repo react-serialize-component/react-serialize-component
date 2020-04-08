@@ -24,3 +24,17 @@ export interface Payload {
 export interface anyFunc {
   (...reset: any): any;
 }
+
+export interface Env {
+  proxy: {
+    request?: {
+      [reg: string]: (config: PlainObject) => PlainObject;
+    };
+    response?: {
+      [reg: string]: (data: any) => any;
+    };
+  };
+  alert: (msg: string) => void;
+  confirm: (msg: string, title?: string) => Promise<boolean>;
+  [propName: string]: any;
+}

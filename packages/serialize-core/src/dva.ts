@@ -53,7 +53,7 @@ export { connect, Provider };
 export function parseDataSource(dataSources: DataSources): Models {
   const result: Models = {};
   const keys = Object.keys(dataSources);
-  keys.forEach(namespace => {
+  keys.forEach((namespace) => {
     const dataSource: DataSource = dataSources[namespace];
     let { data = {}, ...otherProps } = dataSource;
     const otherKeys = Object.keys(otherProps);
@@ -123,7 +123,7 @@ export function parseDataSource(dataSources: DataSources): Models {
       if (!data[key]) {
         data[key] = {};
       }
-      res[key] = function*(action: payloadAction, effectsMethod: EffectsCommandMap) {
+      res[key] = function* (action: payloadAction, effectsMethod: EffectsCommandMap) {
         const state = yield effectsMethod.select((state: any) => state);
         const result = yield effectsMethod.call(detail, action, state);
         if (result) {
@@ -149,7 +149,6 @@ export function parseDataSource(dataSources: DataSources): Models {
           const keys = Object.keys(payload);
           const newState = { ...state };
           return keys.reduce((result, key, index) => {
-            console.log(result, key);
             if (!state[key] || isEmpty(state[key])) {
               result[key] = payload[key];
             } else {
@@ -169,7 +168,7 @@ export function parseDataSource(dataSources: DataSources): Models {
 export function findDataSource(schema: SchemaNode): DataSources {
   const dataSources: DataSources = {};
   const keys = Object.keys(schema);
-  keys.forEach(key => {
+  keys.forEach((key) => {
     if (key === 'DataSource') {
       Object.assign(dataSources, { ...(schema[key] as object) });
     } else {
