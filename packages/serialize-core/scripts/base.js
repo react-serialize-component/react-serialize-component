@@ -11,6 +11,9 @@ module.exports = {
   watch: env !== 'prod',
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.json'],
+    alias: {
+      'react-dom': '@hot-loader/react-dom',
+    },
   },
   externals: {
     react: 'React',

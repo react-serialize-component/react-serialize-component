@@ -1,3 +1,4 @@
+import { hot } from 'react-hot-loader/root';
 import React from 'react';
 import './axios/axiosConfig';
 import { Dispatch } from 'redux';
@@ -164,6 +165,8 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   }
 }
 
+let memoizeCache: any = {};
+
 const app: App = {
   [componentSymobol]: {},
   [preDataSourcesSymobol]: null,
@@ -191,6 +194,11 @@ const app: App = {
   },
   // 根节点渲染
   render(schemaNode: SchemaNode | string) {
+    // 进render方法，销毁整棵树，从来？
+    // if (process.env.NODE_ENV !== 'production') {
+    //   memoizeCache = {};
+    //   console.log('mneme cache', memoizeCache);
+    // }
     if (typeof schemaNode === 'string') {
       try {
         schemaNode = JSON.parse(schemaNode);
@@ -206,7 +214,6 @@ const app: App = {
     );
   },
   initComponent(schemaNode: SchemaNode, otherProps: PlainObject = {}) {
-    // console.log('in ini component', (module as any).hot);
     // 进入该这个方法意味着一定是个schema的组件
     let type: any = schemaNode.$type || schemaNode.type;
     if (!type) {
@@ -246,96 +253,116 @@ const app: App = {
    * 负责将bindData中的定义的数据项目注入到组件当中
    * @param opt: bindDataSource string
    * 这里为了防止绑定数据时候的对象发生变化，所以讲 bindData转换成string，然后用memoize缓存，通过这个方法减少组件重绘次数
+   * 问题，hot-loader无法替换该模块，因为模块被缓存了？？？
    */
-  injectData: memoize(function (opt: bindDataSource) {
-    if (!opt || isEmpty(opt)) {
-      return SchemaRender;
-    }
-    const Com = connect(
-      (state: any) => {
-        const dataSourceKeys: Array<string> = Object.keys(opt);
-        const data: { [dataSourceName: string]: any } = {};
-        dataSourceKeys.reduce((result, key) => {
-          if (state[key]) {
-            if (opt[key] === true) {
-              result[key] = state[key];
-            } else if (Array.isArray(opt[key])) {
-              const pickRes = pick(state[key], opt[key] as Array<string>);
-              if (pickRes && !isEmpty(pickRes)) {
-                result[key] = pickRes;
+  injectData: memoize(
+    function (opt: bindDataSource) {
+      if (!opt || isEmpty(opt)) {
+        return SchemaRender;
+      }
+      const Com = connect(
+        (state: any) => {
+          const dataSourceKeys: Array<string> = Object.keys(opt);
+          const data: { [dataSourceName: string]: any } = {};
+          dataSourceKeys.reduce((result, key) => {
+            if (state[key]) {
+              if (opt[key] === true) {
+                result[key] = state[key];
+              } else if (Array.isArray(opt[key])) {
+                const pickRes = pick(state[key], opt[key] as Array<string>);
+                if (pickRes && !isEmpty(pickRes)) {
+                  result[key] = pickRes;
+                }
               }
             }
-          }
-          return result;
-        }, data);
-        return {
-          data,
-        };
+            return result;
+          }, data);
+          return {
+            data,
+          };
+        },
+        (dispatch: Dispatch) => {
+          // 获取所有数据源的名称
+          const dataSourceKeys = Object.keys(opt);
+          // 取出所有models
+          const models: Array<Model> = dva.getModels();
+          // 取出effects
+          const effects: { [namespace: string]: { [effectsMethod: string]: (payload: PlainObject) => any } } = {};
+          dataSourceKeys.reduce((results, namespace) => {
+            const current = models.find((one: Model) => one.namespace === namespace);
+            if (current) {
+              const effects: any = current.effects;
+              const reducers: any = current.reducers;
+              const namespaceMethod: PlainObject = {};
+              Object.keys(reducers).reduce((res, key) => {
+                let k: string = key.replace(namespace + '/', '');
+                res[k] = function (payload: any) {
+                  return dispatch({
+                    type: key,
+                    payload,
+                  });
+                };
+                return res;
+              }, namespaceMethod);
+              Object.keys(effects).reduce((res, key) => {
+                let k: string = key.replace(namespace + '/', '');
+                k = k.slice(0, 1).toUpperCase() + k.slice(1);
+                k = 'fetch' + k;
+                res[k] = function (payload: any) {
+                  return dispatch({
+                    type: key,
+                    payload,
+                  });
+                };
+                return res;
+              }, namespaceMethod);
+              results[namespace] = namespaceMethod;
+            }
+            return results;
+          }, effects);
+          return {
+            effects,
+          };
+        },
+        (stateProps: any, dispatchProps: any, ownProps: any) => {
+          const { data, ...otherState } = stateProps;
+          const { effects, ...otherDispatch } = dispatchProps;
+          const keys = Object.keys(data);
+          keys.map((key) => {
+            data[key] = Object.assign({}, data[key], effects[key]);
+          });
+          return {
+            data,
+            ...otherDispatch,
+            ...otherState,
+            ...ownProps,
+          };
+        },
+        {
+          forwardRef: true,
+          context: dvaReduxConnectContext,
+        }
+      )(SchemaRender);
+      return hot(Com);
+    },
+    {
+      cache: {
+        create() {
+          return {
+            has(key) {
+              return key in memoizeCache;
+            },
+            get(key) {
+              return memoizeCache[key];
+            },
+            set(key, value) {
+              memoizeCache[key] = value;
+            },
+          };
+        },
       },
-      (dispatch: Dispatch) => {
-        // 获取所有数据源的名称
-        const dataSourceKeys = Object.keys(opt);
-        // 取出所有models
-        const models: Array<Model> = dva.getModels();
-        // 取出effects
-        const effects: { [namespace: string]: { [effectsMethod: string]: (payload: PlainObject) => any } } = {};
-        dataSourceKeys.reduce((results, namespace) => {
-          const current = models.find((one: Model) => one.namespace === namespace);
-          if (current) {
-            const effects: any = current.effects;
-            const reducers: any = current.reducers;
-            const namespaceMethod: PlainObject = {};
-            Object.keys(reducers).reduce((res, key) => {
-              let k: string = key.replace(namespace + '/', '');
-              res[k] = function (payload: any) {
-                return dispatch({
-                  type: key,
-                  payload,
-                });
-              };
-              return res;
-            }, namespaceMethod);
-            Object.keys(effects).reduce((res, key) => {
-              let k: string = key.replace(namespace + '/', '');
-              k = k.slice(0, 1).toUpperCase() + k.slice(1);
-              k = 'fetch' + k;
-              res[k] = function (payload: any) {
-                return dispatch({
-                  type: key,
-                  payload,
-                });
-              };
-              return res;
-            }, namespaceMethod);
-            results[namespace] = namespaceMethod;
-          }
-          return results;
-        }, effects);
-        return {
-          effects,
-        };
-      },
-      (stateProps: any, dispatchProps: any, ownProps: any) => {
-        const { data, ...otherState } = stateProps;
-        const { effects, ...otherDispatch } = dispatchProps;
-        const keys = Object.keys(data);
-        keys.map((key) => {
-          data[key] = Object.assign({}, data[key], effects[key]);
-        });
-        return {
-          data,
-          ...otherDispatch,
-          ...otherState,
-          ...ownProps,
-        };
-      },
-      {
-        forwardRef: true,
-        context: dvaReduxConnectContext,
-      }
-    )(SchemaRender);
-    return Com;
-  }) as { (opt: bindDataSource): InjectConnect },
+    }
+  ) as { (opt: bindDataSource): InjectConnect },
 };
 
 ['register', 'unRegister', 'render', 'injectData'].map((key) => {

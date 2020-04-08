@@ -56,7 +56,7 @@ const schema = {
     page: true,
     tpl: ['list'],
   },
-  title: 'abc0',
+  title: 'abc1',
   content: {
     type: 'content',
     bindData: {
