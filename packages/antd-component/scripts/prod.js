@@ -17,7 +17,7 @@ const umd = Object.assign({}, main, {
     filename: 'index.js',
     path: main.context + '/dist',
     libraryTarget: 'umd',
-    library: 'ReactSerizlizeCore',
+    library: 'antdJSON',
   },
 });
 const commonjs = Object.assign({}, main, {
