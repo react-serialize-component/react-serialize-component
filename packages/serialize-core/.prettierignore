@@ -1,7 +1,0 @@
-**/*.md
-**/*.svg
-**/*.ejs
-**/*.html
-lib
-package.json
-template/art

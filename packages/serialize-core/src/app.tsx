@@ -1,4 +1,3 @@
-import { hot } from 'react-hot-loader/root';
 import React from 'react';
 import './axios/axiosConfig';
 import { Dispatch } from 'redux';
@@ -137,14 +136,14 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   parseSchema(schema: SchemaNode) {
     const { $type, type, children, ...node } = schema;
     // 当前层的onInit在didMount处理
-    const excludeKey = ['DataSource', 'bindData', 'onInit'];
+    const excludeKey: Array<String> = ['DataSource', 'bindData', 'onInit'];
     const result: any = {};
     const keys = Object.keys(node);
     if (!type === null) {
       keys.push(type);
     }
     keys.forEach((key) => {
-      if (!excludeKey.includes(key)) {
+      if (!excludeKey.some((one) => one === key)) {
         result[key] = this.parseSchemaProps(schema[key], key);
       }
     });
@@ -343,7 +342,7 @@ const app: App = {
           context: dvaReduxConnectContext,
         }
       )(SchemaRender);
-      return hot(Com);
+      return Com;
     },
     {
       cache: {
