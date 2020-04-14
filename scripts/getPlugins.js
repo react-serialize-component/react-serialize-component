@@ -29,13 +29,13 @@ function getTsConfig(opts = {}) {
         // @see https://github.com/umijs/father/issues/61#issuecomment-544822774
         clean: true,
         cacheRoot: `${tempDir}/.rollup_plugin_typescript2_cache`,
-        // TODO: 支持往上找 tsconfig.json
+        useTsconfigDeclarationDir: true,
         // 比如 lerna 的场景不需要每个 package 有个 tsconfig.json
         tsconfig: path.join(opts.cwd, 'tsconfig.json'),
         tsconfigDefaults: {
           compilerOptions: {
             // Generate declaration files by default
-            declaration: true,
+            declaration: false,
           },
         },
         tsconfigOverride: {
@@ -76,7 +76,18 @@ function getPlugins(opts = {}) {
   }
 
   result.push(json());
-  result.push(babel(Object.assign({ runtimeHelpers: !!opts.runtimeHelpers, extensions, exclude: /\/node_modules\// }, getBabelConfig(opts))));
+  const defaultConfig = { runtimeHelpers: !!opts.runtimeHelpers, extensions, exclude: /\/node_modules\// };
+  result.push(
+    babel(
+      Object.assign(
+        defaultConfig,
+        getBabelConfig({
+          type: 'auto',
+          typescript: /tsx?$/.test(opts.entry),
+        })
+      )
+    )
+  );
   if (isPro) {
     result.push(terser());
   }

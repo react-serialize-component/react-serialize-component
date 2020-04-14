@@ -1,8 +1,6 @@
-const path = require('path');
-
 function getBabelConfig(opts = {}) {
-  let type;
-  let typescript = true;
+  let type = opts.type;
+  let typescript = opts.typescript;
   let runtimeHelpers = !!opts.runtimeHelpers;
   const presets = [
     [

@@ -1,6 +1,7 @@
 const path = require('path');
 const { rollup, watch } = require('rollup');
 const getRollupConfig = require('./getRollupConfig');
+const babel = require('./babel');
 
 function getConfig(opts = {}) {
   const cwd = opts.cwd;
@@ -46,6 +47,22 @@ async function build(opts = {}) {
   }
 }
 
-module.exports = build;
+async function babelBuid(opts = {}) {
+  opts.cwd = opts.cwd || process.cwd();
+  babel({
+    type: 'esm',
+    cwd: opts.cwd,
+  });
+  // const configs = getConfig(opts);
+  // for (let config of configs) {
+  //   if (config.babel) {
+  //     if (Array.isArray(config.babel)) {
 
-build();
+  //     } else {}
+  //   }
+  // }
+}
+
+module.exports = build;
+babelBuid();
+// build();

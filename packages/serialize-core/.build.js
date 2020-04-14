@@ -1,11 +1,7 @@
 module.exports = {
   entry: 'src/index.ts',
-  esm: {
-    type: 'babel',
-  },
-  cjs: {
-    type: 'babel',
-  },
+  esm: true,
+  cjs: true,
   umd: {
     globals: {
       moment: 'moment',
@@ -18,4 +14,5 @@ module.exports = {
   },
   external: ['moment', 'dva-core', 'axios', 'redux', 'react-redux'],
   runtimeHelpers: false,
+  babel: ['esm', 'cjs'],
 };

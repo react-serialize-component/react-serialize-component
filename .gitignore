@@ -5,7 +5,8 @@ _gh_pages
 _site
 node_modules
 dist
-/lib
+packages/**/lib
+packages/**/es
 /sdk
 /gh-pages
 /.vscode
