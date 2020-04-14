@@ -67,7 +67,7 @@ module.exports = async function (opt = {}) {
       console.log(chalk.cyan(`watcher ${relPath}`));
       task(
         gulp
-          .src(relPath, {
+          .src([relPath], {
             base: srcPath,
             allowEmpty: true,
           })
