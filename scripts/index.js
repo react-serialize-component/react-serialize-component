@@ -52,6 +52,7 @@ async function babelBuid(opts = {}) {
   babel({
     type: 'esm',
     cwd: opts.cwd,
+    entry: 'src/index.ts',
   });
   // const configs = getConfig(opts);
   // for (let config of configs) {

@@ -1,7 +1,7 @@
 const { join, extname, relative } = require('path');
 const { existsSync, readFileSync, statSync } = require('fs');
 const gulp = require('gulp');
-const gulpTs = require('gulp-typescript');
+const gulpTypescript = require('gulp-typescript');
 const gulpLess = require('gulp-less');
 const gulpIf = require('gulp-if');
 const babel = require('gulp-babel');
@@ -12,38 +12,22 @@ const rimraf = require('rimraf');
 function isTsFile(path) {
   return /\.tsx?$/.test(path) && !path.endsWith('.d.ts');
 }
-function parseTsconfig(path) {
-  const readFile = (path) => readFileSync(path, 'utf-8');
-  const result = ts.readConfigFile(path, readFile);
-  if (result.error) {
-    return;
-  }
-  return result.config;
-}
-
-function getTsconfigCompilerOptions(path) {
-  const config = parseTsconfig(path);
-  return config ? config.compilerOptions : undefined;
-}
-
-function getTSConfig(cwd) {
-  const tsconfigPath = join(cwd, 'tsconfig.json');
-  if (existsSync(tsconfigPath)) {
-    return getTsconfigCompilerOptions(tsconfigPath) || {};
-  }
-  throw new Error(`${cwd}  tsconfig is missing`);
-}
-
 module.exports = async function (opt = {}) {
   const { cwd, type = 'cjs', disableTypeCheck = false, entry } = opt;
   const srcPath = join(cwd, 'src');
+  const typings = join(cwd, 'typings');
   const targetDir = type === 'esm' ? 'es' : 'lib';
   const targetPath = join(cwd, targetDir);
-  const tsConfig = getTSConfig(cwd);
   const isTs = /tsx?/.test(entry);
+  const tsconfigPath = join(cwd, 'tsconfig.json');
+  if (!existsSync(tsconfigPath)) {
+    throw new Error('tsconfig is required');
+  }
+  const tsProject = gulpTypescript.createProject(tsconfigPath, {});
+
   const babelConfig = getBabelConfig(
     Object.assign(opt, {
-      typescript: true,
+      typescript: isTs,
     })
   );
   const babelTransformRegexp = disableTypeCheck ? /\.(t|j)sx?$/ : /\.jsx?$/;
@@ -56,14 +40,15 @@ module.exports = async function (opt = {}) {
     `!${join(srcPath, '**/fixtures{,/**}')}`,
     `!${join(srcPath, '**/__test__{,/**}')}`,
     `!${join(srcPath, '**/*.mdx')}`,
-    `!${join(srcPath, '**/*.+(test|e2e|spec).+(js|jsx|ts|tsx)')}`,
+    `!${join(srcPath, 'example/**/*')}`,
+    `!${join(srcPath, '**/*.+(test|e2e|spec|example).+(js|jsx|ts|tsx)')}`,
   ];
   gulp
-    .src(patterns, {
+    .src(patterns.concat(typings), {
       allowEmpty: true,
       base: srcPath,
     })
-    .pipe(gulpIf((f) => !disableTypeCheck && isTsFile(f.path), gulpTs(tsConfig)))
+    .pipe(gulpIf((f) => !disableTypeCheck && isTsFile(f.path), tsProject()))
     .pipe(gulpIf(isTransform, babel(babelConfig)))
     .pipe(gulp.dest(targetPath));
 };

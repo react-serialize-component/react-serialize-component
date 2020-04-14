@@ -17,12 +17,12 @@
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "declaration": true,
+    "baseUrl": ".",
+    // "declaration": true,
     "allowJs": true,
-    "declarationDir": "./lib",
+    // "declarationDir": "./lib",
     "typeRoots": ["./node_modules/@types", "./typings"]
   },
   "include": ["src/**/*", "typings/**/*", "example/**/*", "node_modules/**/*.js"],
-  "exclude": ["node_modules", "view", "build", "scripts", "webpack", "jest", "mock"],
-  "types": ["typePatches"]
+  "exclude": ["node_modules", "view", "build", "scripts", "webpack", "jest", "mock"]
 }
