@@ -1,18 +1,24 @@
 const path = require('path');
 const { rollup, watch } = require('rollup');
 const getRollupConfig = require('./getRollupConfig');
-const babel = require('./babel');
-
-function getConfig(opts = {}) {
+const babelBuild = require('./babel');
+function getUserConfig(opts) {
   const cwd = opts.cwd;
   const userConfigPath = path.resolve(cwd, '.build.js');
   const userConfig = require(userConfigPath);
   const entry = userConfig.entry;
   if (typeof entry === 'string') {
-    return [getRollupConfig(Object.assign({ cwd }, userConfig))];
+    return [Object.assign({ cwd }, userConfig)];
   }
   return entry.map((one) => {
-    return getRollupConfig(Object.assign({ cwd }, userConfig, { entry: one }));
+    return Object.assign({ cwd }, userConfig, { entry: one });
+  });
+}
+
+function getConfig(opts = {}) {
+  const userConfig = getUserConfig(opts);
+  return userConfig.map((one) => {
+    return getRollupConfig(one);
   });
 }
 
@@ -49,19 +55,38 @@ async function build(opts = {}) {
 
 async function babelBuid(opts = {}) {
   opts.cwd = opts.cwd || process.cwd();
-  babel({
-    type: 'esm',
-    cwd: opts.cwd,
-    entry: 'src/index.ts',
-  });
-  // const configs = getConfig(opts);
-  // for (let config of configs) {
-  //   if (config.babel) {
-  //     if (Array.isArray(config.babel)) {
-
-  //     } else {}
-  //   }
-  // }
+  const configs = getUserConfig(opts);
+  for (let config of configs) {
+    if (config.babel) {
+      const babel = Array.isArray(config.babel) ? config.babel : [babel];
+      const cfg = {
+        cwd: config.cwd,
+        entry: config.entry,
+        runtimeHelpers: config.runtimeHelpers,
+      };
+      for (let type of babel) {
+        if (type === 'esm') {
+          await babelBuild(
+            Object.assign(
+              {
+                type: 'esm',
+              },
+              cfg
+            )
+          );
+        } else if (type === 'cjs') {
+          await babelBuild(
+            Object.assign(
+              {
+                type: 'cjs',
+              },
+              cfg
+            )
+          );
+        }
+      }
+    }
+  }
 }
 
 module.exports = build;
