@@ -18,11 +18,11 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
-    // "declaration": true,
+    "declaration": true,
     "allowJs": true,
-    // "declarationDir": "./lib",
+    "declarationDir": "./lib",
     "typeRoots": ["./node_modules/@types", "./typings"]
   },
   "include": ["src/**/*", "typings/**/*", "example/**/*", "node_modules/**/*.js"],
-  "exclude": ["node_modules", "view", "build", "scripts", "webpack", "jest", "mock"]
+  "exclude": ["node_modules", "view", "build", "scripts", "webpack", "jest", "mock", "src/art/art.js"]
 }

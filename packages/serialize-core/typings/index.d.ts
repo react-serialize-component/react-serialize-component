@@ -1,3 +1,2 @@
-/// <reference path="dva-core.d.ts" />
-/// <reference path="dva-loading.d.ts" />
-/// <reference path="art.d.ts" />
+/// <reference path="dva-core/index.d.ts" />
+/// <reference path="dva-loading/index.d.ts" />
