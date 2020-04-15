@@ -3,7 +3,7 @@ module.exports = {
   extends: ['airbnb-typescript', 'eslint:recommended', 'plugin:eslint-comments/recommended', 'prettier/@typescript-eslint'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: ['./tsconfig.json', './example/tsconfig.json'],
+    project: ['packages/*/tsconfig.json'],
   },
   env: {
     node: true,
@@ -23,8 +23,5 @@ module.exports = {
     'react/static-property-placement': 0,
     'no-param-reassign': 0,
     'no-underscore-dangle': 0,
-  },
-  globals: {
-    dva: dva,
-  },
+  }
 };
