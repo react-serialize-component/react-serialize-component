@@ -69,11 +69,14 @@ module.exports = function (opts = {}) {
   if (opts.external) {
     external = external.concat(opts.external);
   }
-  return {
+  const result = {
     input: opts.entry,
-    watch,
     external,
     output: getOutput(opts),
     plugins: getPlugins(opts),
   };
+  if (opts.watch) {
+    result.watch = watch;
+  }
+  return result;
 };

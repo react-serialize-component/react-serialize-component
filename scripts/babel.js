@@ -8,13 +8,18 @@ const gulpIf = require('gulp-if');
 const babel = require('gulp-babel');
 const getBabelConfig = require('./babelConfig');
 const rimraf = require('rimraf');
+const postcss = require('gulp-postcss');
+const autoprefixer = require('autoprefixer');
+const felxbugs = require('postcss-flexbugs-fixes');
+const cssnano = require('cssnano');
+const NpmImport = require('less-plugin-npm-import');
 // less-plugin-npm-import
 
 function isTsFile(path) {
   return /\.tsx?$/.test(path) && !path.endsWith('.d.ts');
 }
 module.exports = async function (opt = {}) {
-  const { watch = false, cwd, type = 'cjs', disableTypeCheck = false, entry, runtimeHelpers = false } = opt;
+  const { watch = false, cwd, type = 'cjs', lessOpt = {}, disableTypeCheck = false, entry, runtimeHelpers = false } = opt;
   const srcPath = join(cwd, 'src');
   const typings = join(cwd, 'typings');
   const targetDir = type === 'esm' ? 'es' : 'lib';
@@ -48,9 +53,11 @@ module.exports = async function (opt = {}) {
   console.log(chalk.cyan(`babel build start type: ${type}`));
   function task(stream) {
     const tsProject = gulpTypescript.createProject(tsconfigPath, {});
+    const lestOpt = Object.assign({ plugins: [new NpmImport({ prefix: '~' })] }, lessOpt);
     return stream
       .pipe(gulpIf((f) => !disableTypeCheck && isTsFile(f.path), tsProject()))
-      .pipe(gulpIf((f) => /\.less$/.test(f.path), gulpLess()))
+      .pipe(gulpIf((f) => /\.less$/.test(f.path), gulpLess(lestOpt)))
+      .pipe(gulpIf((f) => /\.css$/.test(f.path), postcss([autoprefixer(), felxbugs(), cssnano()])))
       .pipe(gulpIf(isTransform, babel(babelConfig)))
       .pipe(gulp.dest(targetPath));
   }
@@ -60,8 +67,8 @@ module.exports = async function (opt = {}) {
   });
   task(stream).on('end', function () {
     console.log(chalk.cyan(`babel build end type: ${type}`));
-    console.log(chalk.magenta(`start watching type: ${type}`));
     if (watch) {
+      console.log(chalk.magenta(`start watching type: ${type}`));
       const watcher = gulp.watch(patterns);
       watcher.on('change', function (fullPath) {
         const relPath = fullPath.replace(srcPath, '');

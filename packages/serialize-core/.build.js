@@ -1,4 +1,5 @@
 module.exports = {
+  watch: false,
   entry: 'src/index.ts',
   esm: true,
   cjs: false,
@@ -17,6 +18,5 @@ module.exports = {
   babel: ['cjs'],
   // less文件的配置
   lessOpt: {
-    test: 1
   },
 };

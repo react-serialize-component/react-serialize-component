@@ -28,10 +28,10 @@ async function build(opts = {}) {
   const configs = getConfig(opts);
   rimraf.sync(path.join(opts.cwd, 'dist'));
   for (let config of configs) {
-    if (opts.watch) {
+    if (config.watch) {
       const watcher = watch([
         {
-          ...rollupConfig,
+          ...config,
           watch: {},
         },
       ]);
@@ -39,7 +39,7 @@ async function build(opts = {}) {
         if (event.error) {
           signale.error(event.error);
         } else if (event.code === 'START') {
-          log(`[${type}] Rebuild since file changed`);
+          console.log(`Rebuild since file changed`);
         }
       });
       process.once('SIGINT', () => {
@@ -65,6 +65,7 @@ async function babelBuid(opts = {}) {
         cwd: config.cwd,
         entry: config.entry,
         runtimeHelpers: config.runtimeHelpers,
+        lessOpt: config.lessOpt
       };
       for (let type of babel) {
         if (type === 'esm') {
@@ -92,8 +93,8 @@ async function babelBuid(opts = {}) {
 }
 
 module.exports = build;
-// babelBuid();
-build();
+babelBuid();
+// build();
 
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
