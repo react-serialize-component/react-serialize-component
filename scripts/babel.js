@@ -7,14 +7,14 @@ const chalk = require('chalk');
 const gulpIf = require('gulp-if');
 const babel = require('gulp-babel');
 const getBabelConfig = require('./babelConfig');
-const ts = require('typescript');
 const rimraf = require('rimraf');
+// less-plugin-npm-import
 
 function isTsFile(path) {
   return /\.tsx?$/.test(path) && !path.endsWith('.d.ts');
 }
 module.exports = async function (opt = {}) {
-  const { cwd, type = 'cjs', disableTypeCheck = false, entry, runtimeHelpers = false } = opt;
+  const { watch = false, cwd, type = 'cjs', disableTypeCheck = false, entry, runtimeHelpers = false } = opt;
   const srcPath = join(cwd, 'src');
   const typings = join(cwd, 'typings');
   const targetDir = type === 'esm' ? 'es' : 'lib';
@@ -24,12 +24,12 @@ module.exports = async function (opt = {}) {
   if (!existsSync(tsconfigPath)) {
     throw new Error('tsconfig is required');
   }
-  const tsProject = gulpTypescript.createProject(tsconfigPath, {});
-
   const babelConfig = getBabelConfig(
     Object.assign(opt, {
       typescript: isTs,
       type: type,
+      runtimeHelpers,
+      lessInBabelMode: true,
     })
   );
   const babelTransformRegexp = disableTypeCheck ? /\.(t|j)sx?$/ : /\.jsx?$/;
@@ -47,8 +47,10 @@ module.exports = async function (opt = {}) {
   ];
   console.log(chalk.cyan(`babel build start type: ${type}`));
   function task(stream) {
+    const tsProject = gulpTypescript.createProject(tsconfigPath, {});
     return stream
       .pipe(gulpIf((f) => !disableTypeCheck && isTsFile(f.path), tsProject()))
+      .pipe(gulpIf((f) => /\.less$/.test(f.path), gulpLess()))
       .pipe(gulpIf(isTransform, babel(babelConfig)))
       .pipe(gulp.dest(targetPath));
   }
@@ -56,25 +58,26 @@ module.exports = async function (opt = {}) {
     allowEmpty: true,
     base: srcPath,
   });
-  task(stream);
-  stream.on('end', function () {
+  task(stream).on('end', function () {
     console.log(chalk.cyan(`babel build end type: ${type}`));
     console.log(chalk.magenta(`start watching type: ${type}`));
-    const watcher = gulp.watch(patterns);
-    watcher.on('change', function (fullPath) {
-      const relPath = fullPath.replace(srcPath, '');
-      if (!existsSync(fullPath)) return;
-      console.log(chalk.cyan(`watcher ${relPath}`));
-      task(
-        gulp
-          .src([relPath], {
-            base: srcPath,
-            allowEmpty: true,
-          })
-          .on('end', function () {
-            console.log(chalk.cyan('rebuild end'));
-          })
-      );
-    });
+    if (watch) {
+      const watcher = gulp.watch(patterns);
+      watcher.on('change', function (fullPath) {
+        const relPath = fullPath.replace(srcPath, '');
+        if (!existsSync(fullPath)) return;
+        console.log(chalk.cyan(`watcher ${relPath}`));
+        task(
+          gulp
+            .src(fullPath, {
+              base: srcPath,
+              allowEmpty: true,
+            })
+            .on('end', function () {
+              console.log(chalk.cyan('rebuild end'));
+            })
+        );
+      });
+    }
   });
 };

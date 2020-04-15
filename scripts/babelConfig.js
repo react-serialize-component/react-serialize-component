@@ -2,6 +2,7 @@ function getBabelConfig(opts = {}) {
   let type = opts.type;
   let typescript = opts.typescript;
   let runtimeHelpers = !!opts.runtimeHelpers;
+  let lessInBabelMode = opts.lessInBabelMode;
   const presets = [
     [
       require.resolve('@babel/preset-env'),
@@ -17,6 +18,7 @@ function getBabelConfig(opts = {}) {
   }
 
   const plugins = [
+    ...(lessInBabelMode ? [transformImportLess2Css] : []),
     require.resolve('babel-plugin-react-require'),
     require.resolve('@babel/plugin-syntax-dynamic-import'),
     require.resolve('@babel/plugin-proposal-export-default-from'),
@@ -38,6 +40,20 @@ function getBabelConfig(opts = {}) {
   return {
     presets,
     plugins,
+  };
+}
+
+function transformImportLess2Css() {
+  return {
+    name: 'transform-import-less-to-css',
+    visitor: {
+      ImportDeclaration(path, source) {
+        const re = /\.less$/;
+        if (re.test(path.node.source.value)) {
+          path.node.source.value = path.node.source.value.replace(re, '.css');
+        }
+      },
+    },
   };
 }
 module.exports = getBabelConfig;

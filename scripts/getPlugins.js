@@ -1,10 +1,11 @@
 const isPro = process.env.NODE_ENV === 'production';
 const { terser } = require('rollup-plugin-terser');
+const postcss = require('rollup-plugin-postcss');
+const autoprefixer = require('autoprefixer');
+const felxbugs = require('postcss-flexbugs-fixes');
+const cssnano = require('cssnano');
 // svg生成react组件
 // const svgr = require('@svgr/rollup');
-// const autoprefixer = require('autoprefixer');
-// const postcss = require('rollup-plugin-postcss-umi');
-// const NpmImport = require('less-plugin-npm-import');
 const path = require('path');
 const commonjs = require('@rollup/plugin-commonjs');
 const tempDir = require('temp-dir');
@@ -16,6 +17,7 @@ const url = require('@rollup/plugin-url');
 const json = require('@rollup/plugin-json');
 const typescript2 = require('rollup-plugin-typescript2');
 const nodeResolve = require('@rollup/plugin-node-resolve');
+const NpmImport = require('less-plugin-npm-import');
 
 const getBabelConfig = require('./babelConfig');
 
@@ -41,6 +43,7 @@ function getTsConfig(opts = {}) {
         tsconfigOverride: {
           compilerOptions: {
             // Support dynamic import
+            declaration: false,
             target: 'esnext',
           },
         },
@@ -50,9 +53,29 @@ function getTsConfig(opts = {}) {
     )
   );
 }
+const isStartSrc = /^src/;
+
+function getPostCssPlugins (opts = {}) {
+  const cwd = opts.cwd;
+  let entry = opts.entry;
+  let filePath = isStartSrc.test(entry) ? entry.replace(isStartSrc, '') : entry;
+  filePath = filePath.replace(path.extname(filePath), '.css');
+  const outPath = path.join(cwd, `dist/${filePath}`);
+  return postcss({
+    // only support less
+    use: {
+      less: Object.assign({
+        plugins: [new NpmImport({ prefix: '~' })],
+      }, opts.lessOpt || {}),
+    },
+    plugins: [autoprefixer(), felxbugs(), cssnano()],
+    extract: outPath,
+    extensions: ['.css', '.less']
+  })
+}
 
 function getPlugins(opts = {}) {
-  const result = [url()];
+  const result = [getPostCssPlugins(opts), url()];
   if (opts.injectOpts) {
     result.push(inject(opts.injectOpts));
   }

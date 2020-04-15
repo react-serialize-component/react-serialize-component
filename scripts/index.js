@@ -2,6 +2,7 @@ const path = require('path');
 const { rollup, watch } = require('rollup');
 const getRollupConfig = require('./getRollupConfig');
 const babelBuild = require('./babel');
+const rimraf = require('rimraf');
 function getUserConfig(opts) {
   const cwd = opts.cwd;
   const userConfigPath = path.resolve(cwd, '.build.js');
@@ -25,6 +26,7 @@ function getConfig(opts = {}) {
 async function build(opts = {}) {
   opts.cwd = opts.cwd || process.cwd();
   const configs = getConfig(opts);
+  rimraf.sync(path.join(opts.cwd, 'dist'));
   for (let config of configs) {
     if (opts.watch) {
       const watcher = watch([
@@ -90,5 +92,9 @@ async function babelBuid(opts = {}) {
 }
 
 module.exports = build;
-babelBuid();
-// build();
+// babelBuid();
+build();
+
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});

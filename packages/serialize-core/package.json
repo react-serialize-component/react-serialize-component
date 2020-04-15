@@ -31,6 +31,7 @@
     "react-dom": ">=16.0.0"
   },
   "devDependencies": {
+    "@element-react/react-dialog": "0.0.8",
     "@hot-loader/react-dom": "^16.13.0",
     "@types/classnames": "^2.2.10",
     "@types/hoist-non-react-statics": "^3.3.1",
