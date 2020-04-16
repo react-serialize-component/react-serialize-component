@@ -1,0 +1,26 @@
+---
+name: My Document
+route: /custom-route
+menu: Documents
+---
+import { Playground } from 'docz'
+
+# Counter
+
+const schema = {
+  a: 1
+};
+
+<Playground>
+  {() => {
+    const [counter, setCounter] = React.useState(0)
+    return (
+      <>
+        <button onClick={() => setCounter(counter => counter+1)}>
+          Increase
+        </button>
+        <p>{counter}</p>
+      </>
+    )
+  }}
+</Playground>

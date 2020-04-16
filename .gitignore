@@ -10,3 +10,4 @@ packages/**/es
 /sdk
 /gh-pages
 /.vscode
+.docz

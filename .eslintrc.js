@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   extends: ['airbnb-typescript-prettier'],
   parserOptions: {
-    project: ['packages/*/tsconfig.json'],
+    project: ['packages/*/tsconfig.json', 'examples/tsconfig.json'],
   },
   env: {
     node: true,
