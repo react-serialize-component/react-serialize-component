@@ -87,14 +87,13 @@ export function parseDataSource(dataSources: DataSources): Models {
           effectRes = await axios(cfg);
         } else if (isExpressionStr(one)) {
           // 一个表达式类似 ${abc}
-          const compileRes = template.compile(one.tpl)({
-            // -----------one.tpl有问题------------
+          const compileRes = template.compile(one)({
             ...(action.payload || {}),
             state,
             payload: action.payload,
             ...(state[namespace] || {}),
           });
-          if (!isPlainObject(compileRes)) {
+          if (isPlainObject(compileRes)) {
             effectRes = compileRes;
           } else if (typeof compileRes === 'string' && compileRes.indexOf('/') > -1) {
             let url = compileRes;
