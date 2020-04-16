@@ -1,11 +1,11 @@
 import React from 'react';
-import { templateString, templateFun, Payload, anyFunc, PlainObject } from './types';
 import { AxiosRequestConfig } from 'axios';
-import { anyChanged } from './utils';
 import isPlainObject from 'lodash/isPlainObject';
+import { templateString, templateFun, Payload, AnyFunc, PlainObject } from './types';
+import { anyChanged } from './utils';
 
 // eslint-disable-next-line max-len
-type schemaNodeProps = templateString | SchemaNode | templateFun | SchemaNodes | boolean | React.CSSProperties | number | anyFunc;
+type schemaNodeProps = templateString | SchemaNode | templateFun | SchemaNodes | boolean | React.CSSProperties | number | AnyFunc;
 
 export interface DataSource {
   // 数据默认值,就是初始的dva的state
@@ -27,13 +27,11 @@ export function compareDataSource<T extends DataSources>(pre: T | null, next: T)
   }
   const result: DataSources = {};
   const nextKeys = Object.keys(next);
-  nextKeys.forEach((key) => {
+  nextKeys.forEach(key => {
     if (!pre[key]) {
       result[key] = next[key];
-    } else {
-      if (anyChanged(pre[key], next[key])) {
-        result[key] = next[key];
-      }
+    } else if (anyChanged(pre[key], next[key])) {
+      result[key] = next[key];
     }
   });
   return result as T;
@@ -69,7 +67,7 @@ export function isTplOptions(opt: any) {
  */
 type pickedKey = string;
 
-export interface bindDataSource {
+export interface BindDataSource {
   [dataSourceName: string]: boolean | Array<pickedKey>;
 }
 
@@ -84,8 +82,8 @@ export interface SchemaNode {
   // 数据源对象
   DataSource: DataSources;
   // 绑定数据源
-  bindData?: bindDataSource;
-  [propName: string]: bindDataSource | schemaNodeProps | anyFunc | undefined;
+  bindData?: BindDataSource;
+  [propName: string]: BindDataSource | schemaNodeProps | AnyFunc | undefined;
 }
 
 export type SchemaNodes = Array<SchemaNode>;

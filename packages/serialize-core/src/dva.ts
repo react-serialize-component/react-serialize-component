@@ -1,22 +1,22 @@
 import React from 'react';
-import { create, opt, createOpt, dvaInstance, Model } from 'dva-core';
-import { SchemaNode, DataSource, DataSources, isFetchOptions, isTplOptions } from './schema';
+import { create, dvaCoreOpt, CreateOpt, DvaInstance, Model, EffectsMapObject, EffectsCommandMap } from 'dva-core';
 import merge from 'deepmerge';
-import template from './art';
 import createLoading from 'dva-loading';
 import { connect, Provider } from 'react-redux';
-import { EffectsMapObject, EffectsCommandMap } from 'dva-core';
+
 import { Store, Action } from 'redux';
-import { PlainObject } from './types';
-import { isExpressionStr, isTplStr } from './utils';
 import isPlainObject from 'lodash/isPlainObject';
 import axios from 'axios';
 import isEmpty from 'lodash/isEmpty';
+import { isExpressionStr, isTplStr } from './utils';
+import template from './art';
+import { SchemaNode, DataSource, DataSources, isFetchOptions, isTplOptions } from './schema';
+import { PlainObject } from './types';
 
 (window as any).template = template;
 const overwriteMerge = (destinationArray: Array<any>, sourceArray: Array<any>, options: PlainObject) => sourceArray;
 
-export type dvaIns = dvaInstance & {
+export type dvaIns = DvaInstance & {
   getStore(): Store;
   _store: Store;
   _models: Array<Model>;
@@ -24,21 +24,21 @@ export type dvaIns = dvaInstance & {
   replaceModel(...rest: any): any;
 };
 
-export interface payloadAction extends Action {
+export interface PayloadAction extends Action {
   payload?: PlainObject | null | undefined;
 }
 
-export default (opt: opt = {}, createOpt?: createOpt) => {
+export default (opt: dvaCoreOpt = {}, createOpt?: CreateOpt) => {
   const win: any = window;
   if (win.dva) {
     return win.dva;
   }
-  let app = create(opt, createOpt);
+  const app = create(opt, createOpt);
   opt.models = opt.models || [];
   opt.models.forEach((model: Model) => app.model(model));
   app.use(createLoading());
   app.start();
-  let appIns = app as dvaIns;
+  const appIns = app as dvaIns;
   const store = appIns._store;
   appIns.getStore = () => store;
   appIns.getModels = () => appIns._models;
@@ -53,22 +53,22 @@ export { connect, Provider };
 export function parseDataSource(dataSources: DataSources): Models {
   const result: Models = {};
   const keys = Object.keys(dataSources);
-  keys.forEach((namespace) => {
+  keys.forEach(namespace => {
     const dataSource: DataSource = dataSources[namespace];
-    let { data = {}, ...otherProps } = dataSource;
+    const { data = {}, ...otherProps } = dataSource;
     const otherKeys = Object.keys(otherProps);
     const effects: EffectsMapObject = {};
     otherKeys.reduce((res, key) => {
       const one = otherProps[key];
       // 处理不同的模板
-      async function detail(action: payloadAction, state: any) {
-        let result;
+      async function detail(action: PayloadAction, state: any) {
+        let effectRes;
         const t = typeof one;
         // 直接是一个函数。。。。
-        if (t == 'function') {
-          result = await one(action.payload || {}, state);
+        if (t === 'function') {
+          effectRes = await one(action.payload || {}, state);
         } else if (isFetchOptions(one)) {
-          //一个请求对象
+          // 一个请求对象
           let cfg = one;
           if (typeof one === 'string') {
             cfg = {
@@ -79,82 +79,83 @@ export function parseDataSource(dataSources: DataSources): Models {
           if (isTplStr(cfg.url)) {
             cfg.url = template.compile(cfg.url)({
               ...(action.payload || {}),
-              state: state,
+              state,
               payload: action.payload,
               ...(state[namespace] || {}),
             });
           }
-          result = await axios(cfg);
+          effectRes = await axios(cfg);
         } else if (isExpressionStr(one)) {
           // 一个表达式类似 ${abc}
-          const res = template.compile(one.tpl)({
+          const compileRes = template.compile(one.tpl)({
+            // -----------one.tpl有问题------------
             ...(action.payload || {}),
-            state: state,
+            state,
             payload: action.payload,
             ...(state[namespace] || {}),
           });
-          if (!isPlainObject(res)) {
-            result = res;
-          } else if (typeof res === 'string' && res.indexOf('/') > -1) {
-            let url = res;
-            if (isTplStr(res)) {
-              url = template.compile(res)({
+          if (!isPlainObject(compileRes)) {
+            effectRes = compileRes;
+          } else if (typeof compileRes === 'string' && compileRes.indexOf('/') > -1) {
+            let url = compileRes;
+            if (isTplStr(compileRes)) {
+              url = template.compile(compileRes)({
                 ...(action.payload || {}),
-                state: state,
+                state,
                 payload: action.payload,
                 ...(state[namespace] || {}),
               });
             }
-            result = axios({
+            effectRes = axios({
               url,
             });
           }
         } else if (isTplOptions(one) && one.tpl) {
           // 一个模板对象类似{tpl: ${abc}}
-          result = template.compile(one.tpl)({
+          effectRes = template.compile(one.tpl)({
             ...(action.payload || {}),
-            state: state,
+            state,
             payload: action.payload,
             ...(state[namespace] || {}),
           });
         }
-        return result;
+        return effectRes;
       }
       if (!data[key]) {
         data[key] = {};
       }
-      res[key] = function* (action: payloadAction, effectsMethod: EffectsCommandMap) {
-        const state = yield effectsMethod.select((state: any) => state);
-        const result = yield effectsMethod.call(detail, action, state);
-        if (result) {
+      res[key] = function* effect(action: PayloadAction, effectsMethod: EffectsCommandMap) {
+        const state = yield effectsMethod.select((s: any) => s);
+        const resultData = yield effectsMethod.call(detail, action, state);
+        if (resultData) {
           yield effectsMethod.put({
             type: 'update',
             payload: {
-              [key]: result,
+              [key]: resultData,
             },
           });
         }
-        return result;
+        return resultData;
       };
       return res;
     }, effects);
     const model: Model = {
-      namespace: namespace,
+      namespace,
       state: data,
       reducers: {
-        update(state, { payload = {} }: payloadAction) {
+        update(state, { payload = {} }: PayloadAction) {
           if (!payload) {
             return state;
           }
-          const keys = Object.keys(payload);
+          const stateKeys = Object.keys(payload);
           const newState = { ...state };
-          return keys.reduce((result, key, index) => {
+          return stateKeys.reduce((ss, key, index) => {
             if (!state[key] || isEmpty(state[key])) {
-              result[key] = payload[key];
+              ss[key] = payload[key];
             } else {
-              result[key] = merge(state[key], payload[key] as any, { arrayMerge: overwriteMerge });
+              ss[key] = merge(state[key], payload[key] as any, { arrayMerge: overwriteMerge });
             }
-            return result;
+            return ss;
           }, newState);
         },
       },
@@ -168,7 +169,7 @@ export function parseDataSource(dataSources: DataSources): Models {
 export function findDataSource(schema: SchemaNode): DataSources {
   const dataSources: DataSources = {};
   const keys = Object.keys(schema);
-  keys.forEach((key) => {
+  keys.forEach(key => {
     if (key === 'DataSource') {
       Object.assign(dataSources, { ...(schema[key] as object) });
     } else {

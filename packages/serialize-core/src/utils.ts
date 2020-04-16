@@ -1,7 +1,8 @@
-import { PlainObject } from './types';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 import difference from 'lodash/difference';
+import { PlainObject } from './types';
+
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
 export const prettyBytes = (num: number) => {
@@ -16,14 +17,14 @@ export const prettyBytes = (num: number) => {
   }
 
   if (num < 1) {
-    return (neg ? '-' : '') + num + ' B';
+    return `${(neg ? '-' : '') + num} B`;
   }
 
   const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), UNITS.length - 1);
-  const numStr = Number((num / Math.pow(1000, exponent)).toPrecision(3));
+  const numStr = Number((num / 1000 ** exponent).toPrecision(3));
   const unit = UNITS[exponent];
 
-  return (neg ? '-' : '') + numStr + ' ' + unit;
+  return `${(neg ? '-' : '') + numStr} ${unit}`;
 };
 
 export function anyChanged(pre: PlainObject, next: PlainObject) {
@@ -34,7 +35,7 @@ export function anyChanged(pre: PlainObject, next: PlainObject) {
   while (loopList.length) {
     const [one, two] = loopList.pop() as Array<PlainObject>;
     const key1 = Object.keys(one);
-    let key1Map: PlainObject = {};
+    const key1Map: PlainObject = {};
     key1.reduce((res, cur) => {
       res[cur] = cur;
       return res;
@@ -46,18 +47,19 @@ export function anyChanged(pre: PlainObject, next: PlainObject) {
       return true;
     }
     // 对比key是否相同
-    if (key2.some((key) => !key1Map[key])) {
+    if (key2.some(key => !key1Map[key])) {
       return true;
     }
-
-    for (let key in one) {
+    // eslint-disable-next-line guard-for-in
+    for (const key in one) {
       const val1 = one[key];
       const val2 = two[key];
       const tval1 = typeof val1;
       const tval2 = typeof val2;
       if (tval1 !== tval2) {
         return true;
-      } else if (isPlainObject(val1) && isPlainObject(val2)) {
+      }
+      if (isPlainObject(val1) && isPlainObject(val2)) {
         loopList.push([val1, val2]);
       } else if (Array.isArray(val1) && Array.isArray(val2)) {
         // 数组，只处理长度，和内部值按顺序进行对比
@@ -81,7 +83,7 @@ const entityMap: {
   '/': '&#x2F;',
 };
 export const escapeHtml = (str: string) =>
-  String(str).replace(/[&<>"'\/]/g, function (s) {
+  String(str).replace(/[&<>"'/]/g, function rep(s) {
     return entityMap[s];
   });
 
@@ -90,19 +92,19 @@ export function createFunction(js: string): any {
   return fn;
 }
 
-const isEvtReg: RegExp = /^on[A-Z]+.*/;
+const isEvtReg = /^on[A-Z]+.*/;
 // 是一个事件?? onClick
 export function isEventString(str: string | null | undefined) {
   return str && isEvtReg.test(str);
 }
 
-const isExpressStr: RegExp = /^(?:\${|<%|{{).+(?:}}|}|%>)$/;
+const isExpressStr = /^(?:\${|<%|{{).+(?:}}|}|%>)$/;
 // 是一个独立的表达式 ？？${a} {{a}} <%=a%>
 export function isExpressionStr(str: string | null | undefined) {
   return str && isExpressStr.test(str);
 }
 
-const isTemplateReg: RegExp = /(?:\${|<%|{{).+(?:}}|}|%>)/;
+const isTemplateReg = /(?:\${|<%|{{).+(?:}}|}|%>)/;
 export function isTplStr(str: string | null | undefined) {
   return str && isTemplateReg.test(str);
 }
@@ -116,16 +118,16 @@ export function shallowEqualObjects(objA: any, objB: any, excludeKey: Array<stri
     return false;
   }
 
-  var aKeys = difference(Object.keys(objA), excludeKey);
-  var bKeys = difference(Object.keys(objB), excludeKey);
-  var len = aKeys.length;
+  const aKeys = difference(Object.keys(objA), excludeKey);
+  const bKeys = difference(Object.keys(objB), excludeKey);
+  const len = aKeys.length;
 
   if (bKeys.length !== len) {
     return false;
   }
 
-  for (var i = 0; i < len; i++) {
-    var key = aKeys[i];
+  for (let i = 0; i < len; i += 1) {
+    const key = aKeys[i];
 
     if (objA[key] !== objB[key] || !Object.prototype.hasOwnProperty.call(objB, key)) {
       return false;

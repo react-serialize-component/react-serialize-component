@@ -1,3 +1,4 @@
-export { default } from './app';
 import './index.less';
+
+export { default } from './app';
 export * from './app';

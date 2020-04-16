@@ -1,9 +1,10 @@
-import { PlainObject, Env } from './types';
 import { AxiosRequestConfig } from 'axios';
+import { PlainObject, Env } from './types';
+
 export const env: Env = {
   proxy: {
     request: {
-      '.*'(result) {
+      '.*': function all(result) {
         // console.log(result);
         return result;
       },
@@ -11,14 +12,16 @@ export const env: Env = {
     response: {},
   },
   alert(msg) {
+    // eslint-disable-next-line no-alert
     window.alert(msg);
   },
   confirm(msg, title) {
+    // eslint-disable-next-line no-alert
     const res = window.confirm(msg);
     return Promise.resolve(res);
   },
 };
-export default function (opt: PlainObject) {
+export default function setEnv(opt: PlainObject) {
   Object.assign(env, opt);
 }
 
@@ -35,7 +38,7 @@ export function detailReq(config: AxiosRequestConfig) {
   }, config);
 }
 
-export function detailRes(url: string = '', data: any) {
+export function detailRes(url = '', data: any) {
   const { proxy: { response = {} } = {} } = env;
   const keys = Object.keys(response);
   return keys.reduce((result, cur) => {

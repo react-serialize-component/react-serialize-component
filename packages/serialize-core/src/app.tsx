@@ -2,16 +2,17 @@ import React from 'react';
 import './axios/axiosConfig';
 import { Dispatch } from 'redux';
 import pick from 'lodash/pick';
-import { bindDataSource, SchemaNode, DataSource, DataSources, compareDataSource, SchemaRenderProps } from './schema';
-import { PlainObject } from './types';
-import createDva, { Provider, dvaReduxConnectContext, connect, dvaIns, parseDataSource, findDataSource, Models } from './dva';
 import { Model } from 'dva-core';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
 import memoize from 'fast-memoize';
+import createDva, { Provider, dvaReduxConnectContext, connect, dvaIns, parseDataSource, findDataSource, Models } from './dva';
+import { PlainObject } from './types';
+import { BindDataSource, SchemaNode, DataSource, DataSources, compareDataSource, SchemaRenderProps } from './schema';
 import template from './art';
 import { isEventString, anyChanged, shallowEqualObjects } from './utils';
-import { env } from './env';
+import { env as defaultEnv } from './env';
+
 export const componentSymobol = Symbol('schemaComponent');
 export const preDataSourcesSymobol = Symbol('preDataSources');
 interface InjectConnect {
@@ -27,7 +28,7 @@ interface App {
   // 渲染schema的数
   render(SchemaNode: any): JSX.Element | null | undefined | false;
   // 初始化组件所用--注入store
-  injectData(opt: bindDataSource): InjectConnect;
+  injectData(opt: BindDataSource): InjectConnect;
   [propName: string]: any;
 }
 
@@ -55,21 +56,23 @@ class SchemaWrapper extends React.Component<any, any> {
 
   componentDidCatch(error: any, errorInfo: any) {
     this.setState({
-      error: error,
-      errorInfo: errorInfo,
+      error,
+      errorInfo,
     });
   }
 
   render() {
-    if (this.state.errorInfo) {
+    const { errorInfo, error } = this.state;
+    const { children, type } = this.props;
+    if (errorInfo) {
       return (
         <div>
-          <h2>{`render ${this.props.type} schema component error`}</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>{this.state.error && this.state.error.toString()}</details>
+          <h2>{`render ${type} schema component error`}</h2>
+          <details style={{ whiteSpace: 'pre-wrap' }}>{error && error.toString()}</details>
         </div>
       );
     }
-    return this.props.children;
+    return children;
   }
 }
 
@@ -78,12 +81,6 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
     data: {},
   };
 
-  shouldComponentUpdate(nextProps: SchemaRenderProps) {
-    const props = this.props;
-    const res = anyChanged(props.data, nextProps.data) || nextProps.component !== props.component;
-    return res || !shallowEqualObjects(props.schema, nextProps.schema, ['bindData', 'DataSource']) || !shallowEqualObjects(props.env, nextProps.env);
-  }
-
   componentDidMount() {
     const { schema } = this.props;
     // console.log('in mount', schema.type);
@@ -91,6 +88,12 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
       const fn = this.parseSchemaProps(schema.onInit, 'onInit');
       fn();
     }
+  }
+
+  shouldComponentUpdate(nextProps: SchemaRenderProps) {
+    const { props } = this;
+    const res = anyChanged(props.data, nextProps.data) || nextProps.component !== props.component;
+    return res || !shallowEqualObjects(props.schema, nextProps.schema, ['bindData', 'DataSource']) || !shallowEqualObjects(props.env, nextProps.env);
   }
 
   /**
@@ -104,7 +107,7 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
     if (t === 'string' && prop !== '') {
       const fun = template.compile(prop as string);
       if (isEventString(key)) {
-        return function (e: any) {
+        return function str(e: any) {
           fun({
             e,
             env,
@@ -120,30 +123,33 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
         ...env,
         ...data,
       });
-    } else if (t === 'object' && isLikeSchemaNode(prop)) {
+    }
+    if (t === 'object' && isLikeSchemaNode(prop)) {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       return app.initComponent(prop as SchemaNode);
-    } else if (Array.isArray(prop)) {
+    }
+    if (Array.isArray(prop)) {
       // 数组的情况
       return (prop as Array<any>).map((one: any, index) => {
         const res = this.parseSchemaProps(one, null);
         return React.isValidElement(res) ? <React.Fragment key={index}>{res}</React.Fragment> : res;
       });
-    } else {
-      // 函数，数字，null， undefined都不动
-      return prop;
     }
+    // 函数，数字，null， undefined都不动
+    return prop;
   }
+
   parseSchema(schema: SchemaNode) {
     const { $type, type, children, ...node } = schema;
     // 当前层的onInit在didMount处理
-    const excludeKey: Array<String> = ['DataSource', 'bindData', 'onInit'];
+    const excludeKey: Array<string> = ['DataSource', 'bindData', 'onInit'];
     const result: any = {};
     const keys = Object.keys(node);
     if (!type === null) {
       keys.push(type);
     }
-    keys.forEach((key) => {
-      if (!excludeKey.some((one) => one === key)) {
+    keys.forEach(key => {
+      if (!excludeKey.some(one => one === key)) {
         result[key] = this.parseSchemaProps(schema[key], key);
       }
     });
@@ -164,7 +170,7 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   }
 }
 
-let memoizeCache: any = {};
+const memoizeCache: any = {};
 
 const app: App = {
   [componentSymobol]: {},
@@ -199,11 +205,7 @@ const app: App = {
     //   console.log('mneme cache', memoizeCache);
     // }
     if (typeof schemaNode === 'string') {
-      try {
-        schemaNode = JSON.parse(schemaNode);
-      } catch (e) {
-        throw e;
-      }
+      schemaNode = JSON.parse(schemaNode);
     }
     const node: SchemaNode = schemaNode as SchemaNode;
     return (
@@ -225,8 +227,8 @@ const app: App = {
       throw new Error(`The ${type} component could not be found, Use the register method to register ${type} component`);
     }
     type = type.slice(0, 1).toUpperCase() + type.slice(1);
-    ConnectSchema.displayName = type + 'Schema';
-    return <ConnectSchema component={component} schema={schemaNode} env={env} {...otherProps} />;
+    ConnectSchema.displayName = `${type}Schema`;
+    return <ConnectSchema component={component} schema={schemaNode} env={defaultEnv} {...otherProps} />;
   },
   injectModal(schema: SchemaNode) {
     const nextDataSources = findDataSource(schema);
@@ -238,8 +240,8 @@ const app: App = {
     const keys: Array<string> = Object.keys(dataModels);
     const models = dva.getModels();
     app[preDataSourcesSymobol] = nextDataSources;
-    keys.forEach((key) => {
-      const one = models.find((model) => model.namespace === key);
+    keys.forEach(key => {
+      const one = models.find(model => model.namespace === key);
       // 当前model不存在就直接放进去, 否则替换
       if (!one) {
         dva.model(dataModels[key]);
@@ -255,7 +257,7 @@ const app: App = {
    * 问题，hot-loader无法替换该模块，因为模块被缓存了？？？
    */
   injectData: memoize(
-    function (opt: bindDataSource) {
+    function(opt: BindDataSource) {
       if (!opt || isEmpty(opt)) {
         return SchemaRender;
       }
@@ -286,16 +288,16 @@ const app: App = {
           // 取出所有models
           const models: Array<Model> = dva.getModels();
           // 取出effects
-          const effects: { [namespace: string]: { [effectsMethod: string]: (payload: PlainObject) => any } } = {};
+          const effectsResult: { [namespace: string]: { [effectsMethod: string]: (payload: PlainObject) => any } } = {};
           dataSourceKeys.reduce((results, namespace) => {
             const current = models.find((one: Model) => one.namespace === namespace);
             if (current) {
-              const effects: any = current.effects;
-              const reducers: any = current.reducers;
+              const { effects = {} } = current;
+              const { reducers = {} } = current;
               const namespaceMethod: PlainObject = {};
               Object.keys(reducers).reduce((res, key) => {
-                let k: string = key.replace(namespace + '/', '');
-                res[k] = function (payload: any) {
+                const k: string = key.replace(`${namespace}/`, '');
+                res[k] = function(payload: any) {
                   return dispatch({
                     type: key,
                     payload,
@@ -304,10 +306,10 @@ const app: App = {
                 return res;
               }, namespaceMethod);
               Object.keys(effects).reduce((res, key) => {
-                let k: string = key.replace(namespace + '/', '');
+                let k: string = key.replace(`${namespace}/`, '');
                 k = k.slice(0, 1).toUpperCase() + k.slice(1);
-                k = 'fetch' + k;
-                res[k] = function (payload: any) {
+                k = `fetch${k}`;
+                res[k] = function(payload: any) {
                   return dispatch({
                     type: key,
                     payload,
@@ -318,17 +320,17 @@ const app: App = {
               results[namespace] = namespaceMethod;
             }
             return results;
-          }, effects);
+          }, effectsResult);
           return {
-            effects,
+            effectsResult,
           };
         },
         (stateProps: any, dispatchProps: any, ownProps: any) => {
           const { data, ...otherState } = stateProps;
           const { effects, ...otherDispatch } = dispatchProps;
           const keys = Object.keys(data);
-          keys.map((key) => {
-            data[key] = Object.assign({}, data[key], effects[key]);
+          keys.map(key => {
+            data[key] = { ...data[key], ...effects[key] };
           });
           return {
             data,
@@ -361,10 +363,10 @@ const app: App = {
         },
       },
     }
-  ) as { (opt: bindDataSource): InjectConnect },
+  ) as { (opt: BindDataSource): InjectConnect },
 };
 
-['register', 'unRegister', 'render', 'injectData'].map((key) => {
+['register', 'unRegister', 'render', 'injectData'].map(key => {
   app[key] = app[key].bind(app);
 });
 

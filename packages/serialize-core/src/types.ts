@@ -21,7 +21,7 @@ export interface Payload {
   status: number;
 }
 
-export interface anyFunc {
+export interface AnyFunc {
   (...reset: any): any;
 }
 

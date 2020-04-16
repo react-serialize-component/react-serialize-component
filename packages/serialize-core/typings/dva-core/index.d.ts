@@ -35,6 +35,7 @@ declare module 'dva-core' {
     subscriptions?: SubscriptionsMapObject;
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-name-casing
   export interface onActionFunc {
     (api: MiddlewareAPI<any>): void;
   }
@@ -54,7 +55,7 @@ declare module 'dva-core' {
     extraEnhancers?: StoreEnhancer<any>[];
   }
 
-  export interface dvaInstance {
+  export interface DvaInstance {
     /**
      * Register an object of hooks on the application.
      *
@@ -84,15 +85,15 @@ declare module 'dva-core' {
      */
     start: () => any;
   }
-  export type opt = Hooks & {
-    initialState?: Object;
+  export type dvaCoreOpt = Hooks & {
+    initialState?: Record<string, any>;
     models?: Array<Model>;
   };
-  export interface createOpt {
-    initialReducer?: Object;
+  export interface CreateOpt {
+    initialReducer?: Record<string, any>;
     setupMiddlewares?(middlewares: Array<{ (...rest: any): any }>): any;
-    setupApp?(app: dvaInstance): any;
+    setupApp?(app: DvaInstance): any;
   }
 
-  export function create(opt?: opt, createOpt?: createOpt): dvaInstance;
+  export function create(opt?: dvaCoreOpt, createOpt?: CreateOpt): DvaInstance;
 }

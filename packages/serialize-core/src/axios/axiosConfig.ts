@@ -7,7 +7,7 @@ interface AxiosConfig extends AxiosRequestConfig {
   errCode: PlainObject;
 }
 
-const CancelToken = axios.CancelToken;
+const { CancelToken } = axios;
 axios.defaults.timeout = 30000;
 
 (window as any).axios = axios;
@@ -17,7 +17,7 @@ const lockUrl: PlainObject = {};
 const s1 = /^@.+/;
 
 // 节约型策略：即共享类型，由同类型的第一个请求发送ajax，（在第一个ajax返回之前的）后续的同类型共享ajax返回结果
-const s2 = /^\!.+/;
+const s2 = /^!.+/;
 
 const detailLockKey = (config: any, promise: Promise<any>) => {
   const { lockKey } = config;
@@ -55,21 +55,21 @@ const detailLockKey = (config: any, promise: Promise<any>) => {
 
 // 添加时间戳
 axios.interceptors.request.use(
-  function (config) {
+  function req(config) {
     try {
       config = detailReq(config);
     } catch (e) {
       console.error(e);
     }
     const params = config.params || {};
-    let headers = config.headers || {};
+    const headers = config.headers || {};
     params._t = +new Date();
     config.params = params;
     config.headers = headers;
     return config;
   },
-  function (error) {
-    const errCode = (axios.defaults as AxiosConfig).errCode;
+  function err(error) {
+    const { errCode } = axios.defaults as AxiosConfig;
     return Promise.reject({
       code: errCode.err.code,
       message: errCode.err.message,
@@ -78,10 +78,10 @@ axios.interceptors.request.use(
 );
 
 axios.interceptors.response.use(
-  function (res: AxiosResponse<Payload>): any {
-    const errCode = (axios.defaults as AxiosConfig).errCode;
-    let data = res.data;
-    const status = res.status;
+  function req(res: AxiosResponse<Payload>): any {
+    const { errCode } = axios.defaults as AxiosConfig;
+    let { data } = res;
+    const { status } = res;
     try {
       data = detailRes(res.config.url || '', data);
     } catch (error) {
@@ -112,8 +112,8 @@ axios.interceptors.response.use(
       message: errCode.err.message,
     };
   },
-  function (err: AxiosError) {
-    const errCode = (axios.defaults as AxiosConfig).errCode;
+  function errReq(err: AxiosError) {
+    const { errCode } = axios.defaults as AxiosConfig;
     if (axios.isCancel(err)) {
       return {
         code: errCode.cancelErr.code,
@@ -121,7 +121,7 @@ axios.interceptors.response.use(
       };
     }
     // console.dir(err);
-    const message = err.message;
+    const { message } = err;
     // 超时错误
     // message是axios写的
     if (message.startsWith('timeout of')) {
@@ -152,12 +152,12 @@ axios.interceptors.response.use(
   }
 );
 
-const Axios = (axios as any).Axios;
+const { Axios } = axios as any;
 const req = Axios.prototype.request;
 /**
  * 覆盖全局request的方法，方便处理异常出现的情况
  */
-Axios.prototype.request = function (config: any) {
+Axios.prototype.request = function request(config: any) {
   if (config.lockKey) {
     const source = CancelToken.source();
     config.source = source;

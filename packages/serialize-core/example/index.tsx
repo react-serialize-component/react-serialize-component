@@ -5,10 +5,11 @@ import { render, register } from '../src/index';
 import '../src/utils';
 
 function Page(props: any) {
+  const { title, content } = props;
   return (
     <div>
-      <p>title: {props.title}</p>
-      <div>{props.content}</div>
+      <p>title: {title}</p>
+      <div>{content}</div>
     </div>
   );
 }
@@ -18,14 +19,13 @@ function Content(props: any) {
   return <div {...other}>{children}</div>;
 }
 class Tpl extends React.PureComponent<any, any> {
-  componentDidMount() {
-    console;
-  }
   createMarkup() {
-    return { __html: this.props.tpl || '' };
+    const { tpl } = this.props;
+    return { __html: tpl || '' };
   }
+
   render() {
-    return <div dangerouslySetInnerHTML={this.createMarkup()}></div>;
+    return <div dangerouslySetInnerHTML={this.createMarkup()} />; /* eslint-disable-line */
   }
 }
 register('page', Page);
@@ -81,15 +81,21 @@ const schema = {
 };
 
 @hot
-class App extends React.PureComponent {
-  state = {
-    schema: schema,
-  };
+class App extends React.PureComponent<any, { schema: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      schema,
+    };
+  }
+
   componentDidMount() {
     console.log(this);
   }
+
   render() {
-    return <div>{render(this.state.schema)}</div>;
+    const { schema: config } = this.state;
+    return <div>{render(config)}</div>;
   }
 }
 

@@ -100,7 +100,7 @@ declare type artTemplateDefaults = {
  * @param filenameOrTemplateId  [ for bowser ] id of template      [ for Node ] fileName of template
  * @param content [ if is Object ] return compile result , [ if is string ] return compile Funtion
  */
-declare function artTemplate(filenameOrTemplateId: string, content?: string | Object): any;
+// declare function artTemplate(filenameOrTemplateId: string, content?: string | Record<string, any>): any;
 declare namespace artTemplate {
   export const defaults: artTemplateDefaults;
   export const extension: { [key: string]: Function };

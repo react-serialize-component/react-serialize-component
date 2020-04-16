@@ -1,5 +1,5 @@
-import template from './art';
 import moment from 'moment';
+import template from './art';
 import { escapeHtml, prettyBytes } from '../utils';
 
 const endWith = /(.*)}$/;
@@ -32,7 +32,7 @@ template.defaults.imports = {
   raw: (input: any) => input,
   date: (input: any, format = 'LLL', inputFormat = 'X') => moment(input, inputFormat).format(format),
   number: (input: any) => {
-    let parts = String(input).split('.');
+    const parts = String(input).split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return parts.join('.');
   },
@@ -41,20 +41,21 @@ template.defaults.imports = {
     input = parseFloat(input) || 0;
     decimals = parseInt(decimals, 10) || 0;
 
-    let whole = input * 100;
-    let multiplier = Math.pow(10, decimals);
+    const whole = input * 100;
+    const multiplier = 10 ** decimals;
 
-    return (Math.round(whole * multiplier) / multiplier).toFixed(decimals) + '%';
+    return `${(Math.round(whole * multiplier) / multiplier).toFixed(decimals)}%`;
   },
   bytes: (input: any) => (input ? prettyBytes(parseFloat(input)) : input),
   round: (input: any, decimals: any = 0) => {
+    // eslint-disable-next-line no-restricted-globals
     if (isNaN(input)) {
       return 0;
     }
 
     decimals = parseInt(decimals, 10) || 2;
 
-    let multiplier = Math.pow(10, decimals);
+    const multiplier = 10 ** decimals;
     return (Math.round(input * multiplier) / multiplier).toFixed(decimals);
   },
   truncate: (input: any, length: any, end: any) => {
@@ -95,7 +96,7 @@ template.defaults.imports = {
   base64Encode(str: any) {
     return btoa(
       encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function toSolidBytes(match, p1) {
-        return String.fromCharCode(('0x' + p1) as any);
+        return String.fromCharCode(`0x${p1}` as any);
       })
     );
   },
@@ -103,8 +104,8 @@ template.defaults.imports = {
     return decodeURIComponent(
       atob(str)
         .split('')
-        .map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        .map(function mp(c) {
+          return `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`;
         })
         .join('')
     );
@@ -119,18 +120,19 @@ template.defaults.imports = {
  */
 const rule = {
   test: /\${([@]?)[ \t]*(\/?)([\w\W]*?)[ \t]*(}+)/,
-  use: function(match: any, raw: any, close: any, code: any, end: any) {
+  use(match: any, raw: any, close: any, code: any, end: any) {
     const r = end.match(endWith);
-    code = code + (r ? r[1] : null);
+    code += r ? r[1] : null;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const compiler: any = this;
-    const options = compiler.options;
+    const { options } = compiler;
     const esTokens = compiler.getEsTokens(code);
     const values = esTokens.map((token: any) => token.value);
     const result: any = {};
 
     let group;
     let output = raw ? 'raw' : false;
-    let key = close + values.shift();
+    const key = close + values.shift();
 
     switch (key) {
       case 'set':
@@ -142,7 +144,7 @@ const rule = {
 
         break;
 
-      case 'else':
+      case 'else': {
         const indexIf = values.indexOf('if');
 
         if (~indexIf) {
@@ -153,12 +155,13 @@ const rule = {
         }
 
         break;
+      }
 
       case '/if':
         code = '}';
         break;
 
-      case 'each':
+      case 'each': {
         group = rule._split(esTokens);
         group.shift();
         const object = group[0] || '$data';
@@ -166,6 +169,7 @@ const rule = {
         const index = group[2] || '$index';
         code = `$each(${object},function(${value},${index}){`;
         break;
+      }
       case '/each':
         code = '})';
         break;
@@ -193,33 +197,34 @@ const rule = {
           break;
         }
 
+      // eslint-disable-next-line no-fallthrough
       default:
         if (~values.indexOf('|')) {
           // 将过滤器解析成二维数组
-          const group = esTokens
-            .reduce((group: any, token: any) => {
+          const groupAll = esTokens
+            .reduce((one: any, token: any) => {
               const { value, type } = token;
               if (value === '|') {
-                group.push([]);
+                one.push([]);
               } else if (type !== `whitespace` && type !== `comment`) {
-                if (!group.length) {
-                  group.push([]);
+                if (!one.length) {
+                  one.push([]);
                 }
-                group[group.length - 1].push(token);
+                one[one.length - 1].push(token);
               }
-              return group;
+              return one;
             }, [])
             .map((g: any) => rule._split(g));
 
           // 将过滤器管道化
-          code = group.reduce(
+          code = groupAll.reduce(
             (accumulator: any, filter: any) => {
               const name = filter.shift();
               filter.unshift(accumulator);
 
               return `$imports.${name}(${filter.join(',')})`;
             },
-            group
+            groupAll
               .shift()
               .join(` `)
               .trim()
@@ -262,10 +267,10 @@ const rule = {
 
       lastToken = esToken;
 
-      current++;
+      current += 1;
     }
 
-    return group.map(g => g.map(g => g.value).join(``));
+    return group.map(one => one.map(g => g.value).join(``));
   },
 };
 
