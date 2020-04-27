@@ -45,6 +45,8 @@
     "@babel/register": "7.4.4",
     "@babel/runtime": "^7.8.7",
     "@jianxcao/mock": "^0.0.7",
+    "@mdx-js/mdx": "^1.5.8",
+    "@mdx-js/react": "^1.5.8",
     "@rollup/plugin-commonjs": "^11.0.2",
     "@rollup/plugin-image": "^2.0.4",
     "@rollup/plugin-inject": "^4.0.1",
@@ -67,6 +69,7 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb-typescript-prettier": "^2.1.1",
     "eslint-plugin-react-hooks": "^3.0.0",
+    "gatsby-plugin-mdx": "^1.1.9",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-if": "^3.0.0",
@@ -81,6 +84,8 @@
     "postcss-cssnext": "^3.1.0",
     "postcss-flexbugs-fixes": "^4.2.0",
     "prettier": "^1.19.1",
+    "prism-react-renderer": "^1.0.2",
+    "react-live": "^2.2.2",
     "rimraf": "^3.0.2",
     "rollup": "^2.3.4",
     "rollup-plugin-babel": "4.3.3",
@@ -93,7 +98,8 @@
     "stylelint-config-standard": "^18.2.0",
     "stylelint-order": "^2.1.0",
     "temp-dir": "^2.0.0",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "unified-ui": "0.0.3"
   },
   "engines": {
     "node": ">=8.0.0"

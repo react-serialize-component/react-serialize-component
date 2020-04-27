@@ -1,7 +1,9 @@
+/* eslint-disable */
 export default {
+  src: './docs',
   title: 'abc',
-  config: '.doczrc.js',
   typescript: true,
+  themesDir: 'theme',
   themeConfig: {
     initialColorMode: 'dark',
   },
