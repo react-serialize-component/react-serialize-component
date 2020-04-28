@@ -1,4 +1,5 @@
 /** @jsx jsx */
+
 /* eslint-disable react/button-has-type */
 /* eslint-disable react/jsx-filename-extension */
 /* eslint-disable import/no-unresolved */
@@ -11,34 +12,40 @@ import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
 import { mdx } from '@mdx-js/react';
 import copy from 'copy-text-to-clipboard';
 import React from 'react';
-import { useConfig } from 'docz';
+import { useMDXScope } from 'gatsby-plugin-mdx/context.js';
+import { useConfig, useComponentProps } from 'docz';
 import Clipboard from 'react-feather/dist/icons/clipboard';
 import CodeIcon from 'react-feather/dist/icons/code';
 import { Wrapper } from './Wrapper';
 import { usePrismTheme } from '~utils/theme';
 import * as styles from './styles';
 
-// const transformCode = code => {
-//   if (code.startsWith('()') || code.startsWith('class')) return code;
-//   return `<React.Fragment>${code}</React.Fragment>`;
-// };
+const transformCode = code => {
+  // if (code.startsWith('()') || code.startsWith('class')) return `/** @jsx mdx */${code}`;
+  // return `/** @jsx mdx */<React.Fragment>${code}</React.Fragment>`;
+  return `
+    /**@jsx mdx */${code}
+  `;
+};
 
-export const Code = ({ children, className: outerClassName, live, render, schema }) => {
+export const Code = ({ children, className: outerClassName, live, render, schema, noInline = false }) => {
   const [language] = outerClassName ? outerClassName.replace(/language-/, '').split(' ') : ['text'];
-
   const {
     themeConfig: { showPlaygroundEditor, showLiveError },
   } = useConfig();
-  const [scopeOnMount] = React.useState({ mdx });
+  const ScopeContext = useMDXScope();
+  const [scopeOnMount] = React.useState({ ...ScopeContext, mdx, React });
   const theme = usePrismTheme();
   const [showingCode, setShowingCode] = React.useState(showPlaygroundEditor);
 
   const copyCode = () => copy(children.trim());
   const toggleCode = () => setShowingCode(s => !s);
-
+  if (noInline === 'false') {
+    noInline = false;
+  }
   if (live) {
     return (
-      <LiveProvider code={children.trim()} transformCode={code => `/** @jsx mdx */${code}`} scope={scopeOnMount} theme={theme}>
+      <LiveProvider code={children.trim()} scope={scopeOnMount} transformCode={transformCode} theme={theme} noInline={noInline}>
         <div sx={styles.previewWrapper}>
           <Wrapper content='preview' useScoping={false} showingCode={showingCode}>
             <LivePreview sx={styles.preview} data-testid='live-preview' />

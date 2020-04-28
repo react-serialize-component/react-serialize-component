@@ -22,18 +22,17 @@ import { Playground } from 'docz'
   }}
 </Playground>
 
+
 ``` json schema=true
 {
   type: 'page'
 }
-
 ```
 
-``` jsx live=true
-() => (
-  <h3>
-    So functional. Much wow!
-  </h3>
-)
 
+``` tsx live=true noInline=true
+  const a = 1;
+  render(<h3>
+    So functional. Much wow!
+  </h3>)
 ```
