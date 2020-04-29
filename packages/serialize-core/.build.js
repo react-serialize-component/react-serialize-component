@@ -1,8 +1,8 @@
 module.exports = {
-  watch: false,
+  watch: true,
   entry: 'src/index.ts',
   esm: true,
-  cjs: false,
+  cjs: true,
   umd: {
     globals: {
       moment: 'moment',
@@ -15,8 +15,7 @@ module.exports = {
   },
   external: ['moment', 'dva-core', 'axios', 'redux', 'react-redux'],
   runtimeHelpers: false,
-  babel: ['cjs'],
+  babel: ['cjs', 'esm'],
   // less文件的配置
-  lessOpt: {
-  },
+  lessOpt: {},
 };

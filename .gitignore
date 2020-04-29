@@ -11,3 +11,5 @@ packages/**/es
 /gh-pages
 /.vscode
 .docz
+
+.eslintcache
