@@ -157,13 +157,15 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
   }
 
   render() {
-    const { component: Com, schema } = this.props;
+    const { component: Com, schema, data } = this.props;
     const child = this.parseSchemaProps(schema.children, null);
     const { onInit, ...schemaProps } = this.parseSchema(schema);
     return (
       <div>
         <SchemaWrapper type={schema.$type || schema.type}>
-          <Com {...schemaProps}>{child}</Com>
+          <Com {...schemaProps} data={data}>
+            {child}
+          </Com>
         </SchemaWrapper>
       </div>
     );
@@ -327,7 +329,7 @@ const app: App = {
         },
         (stateProps: any, dispatchProps: any, ownProps: any) => {
           const { data, ...otherState } = stateProps;
-          const { effects, ...otherDispatch } = dispatchProps;
+          const { effects = {}, ...otherDispatch } = dispatchProps;
           const keys = Object.keys(data);
           keys.map(key => {
             data[key] = { ...data[key], ...effects[key] };

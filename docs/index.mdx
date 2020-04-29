@@ -32,9 +32,44 @@ import Core from 'serialize-core';
 
 
 ``` tsx live=true noInline=true
-  const a = 1;
-  console.log(Core);
-  render(<h3>
-    So functional. Much wow!
-  </h3>)
+  function Page(props) {
+    const { title, content } = props;
+    return (
+      <div>
+        <p>title: {title}</p>
+        <div>{content}</div>
+      </div>
+    );
+  }
+  class Tpl extends React.PureComponent {
+    createMarkup() {
+      const { tpl } = this.props;
+      return { __html: tpl || '' };
+    }
+
+    render() {
+      return <div dangerouslySetInnerHTML={this.createMarkup()} />; /* eslint-disable-line */
+    }
+  }
+  const schema = {
+    type: 'page',
+    DataSource: {
+      page: {
+        data: { title: 'test' },
+      },
+    },
+    bindData: {
+      page: true
+    },
+    title: '${page.title}',
+    content: {
+      type: 'tpl',
+      tpl: '<div>test</div>'
+    }
+  };
+  Core.register('page', Page);
+  Core.register('tpl', Tpl);
+  render(<div>
+    {Core.render(schema)}
+  </div>)
 ```

@@ -13,7 +13,6 @@ import template from './art';
 import { SchemaNode, DataSource, DataSources, isFetchOptions, isTplOptions } from './schema';
 import { PlainObject } from './types';
 
-(window as any).template = template;
 const overwriteMerge = (destinationArray: Array<any>, sourceArray: Array<any>, options: PlainObject) => sourceArray;
 
 export type dvaIns = DvaInstance & {
@@ -27,9 +26,9 @@ export type dvaIns = DvaInstance & {
 export interface PayloadAction extends Action {
   payload?: PlainObject | null | undefined;
 }
-
 export default (opt: dvaCoreOpt = {}, createOpt?: CreateOpt) => {
-  const win: any = window;
+  // eslint-disable-next-line no-undef
+  const win: any = globalThis;
   if (win.dva) {
     return win.dva;
   }

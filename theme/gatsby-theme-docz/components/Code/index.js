@@ -34,7 +34,7 @@ export const Code = ({ children, className: outerClassName, live, render, schema
     themeConfig: { showPlaygroundEditor, showLiveError },
   } = useConfig();
   const ScopeContext = useMDXScope();
-  const [scopeOnMount] = React.useState({ ...ScopeContext, mdx, React, window });
+  const [scopeOnMount] = React.useState({ ...ScopeContext, mdx });
   const theme = usePrismTheme();
   const [showingCode, setShowingCode] = React.useState(showPlaygroundEditor);
 
