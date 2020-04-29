@@ -1,5 +1,5 @@
 module.exports = {
-  watch: true,
+  watch: false,
   entry: 'src/index.ts',
   esm: true,
   cjs: true,
