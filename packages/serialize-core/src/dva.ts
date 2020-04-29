@@ -43,7 +43,7 @@ export default (opt: dvaCoreOpt = {}, createOpt?: CreateOpt) => {
   appIns.getStore = () => store;
   appIns.getModels = () => appIns._models;
   win.dva = app;
-  return app;
+  return app as dvaIns;
 };
 export interface Models {
   [namespace: string]: Model;

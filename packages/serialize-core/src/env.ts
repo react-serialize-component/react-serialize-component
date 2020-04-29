@@ -17,6 +17,7 @@ export const env: Env = {
   },
   confirm(msg, title) {
     // eslint-disable-next-line no-alert
+    // eslint-disable-next-line no-restricted-globals
     const res = window.confirm(msg);
     return Promise.resolve(res);
   },
