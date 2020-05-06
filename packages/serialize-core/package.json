@@ -1,5 +1,5 @@
 {
-  "name": "serialize-core",
+  "name": "@react-serialize-component/core",
   "version": "0.0.1",
   "description": "write react by json serialize antd component",
   "keywords": [

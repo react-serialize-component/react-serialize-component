@@ -1,5 +1,5 @@
 {
-  "name": "antd-component",
+  "name": "@react-serialize-component/antd",
   "version": "0.0.1",
   "description": "json antd component serialize component",
   "author": "jianxcao <jianxcao@126.com>",
@@ -27,8 +27,8 @@
     "@babel/preset-env": "^7.8.7",
     "@babel/preset-react": "^7.8.3",
     "@babel/runtime": "^7.8.7",
-    "@jianxcao/mock": "^0.0.7",
     "@hot-loader/react-dom": "^16.13.0",
+    "@jianxcao/mock": "^0.0.7",
     "@types/classnames": "^2.2.10",
     "@types/hoist-non-react-statics": "^3.3.1",
     "@types/lodash": "^4.14.149",
@@ -65,6 +65,7 @@
     "webpackbar": "^4.0.0"
   },
   "dependencies": {
+    "@react-serialize-component/core": "^0.0.1",
     "antd": "^3.26.15"
   }
 }

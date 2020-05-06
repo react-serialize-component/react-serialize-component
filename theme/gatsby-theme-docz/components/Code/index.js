@@ -13,7 +13,7 @@ import { mdx } from '@mdx-js/react';
 import copy from 'copy-text-to-clipboard';
 import React from 'react';
 import { useMDXScope } from 'gatsby-plugin-mdx/context.js';
-import { useConfig, useComponentProps } from 'docz';
+import { useConfig } from 'docz';
 import Clipboard from 'react-feather/dist/icons/clipboard';
 import CodeIcon from 'react-feather/dist/icons/code';
 import { Wrapper } from './Wrapper';
@@ -21,10 +21,9 @@ import { usePrismTheme } from '~utils/theme';
 import * as styles from './styles';
 
 const transformCode = code => {
-  // if (code.startsWith('()') || code.startsWith('class')) return `/** @jsx mdx */${code}`;
-  // return `/** @jsx mdx */<React.Fragment>${code}</React.Fragment>`;
   return `
-    /**@jsx mdx */${code}
+    /**@jsx mdx */
+    ${code}
   `;
 };
 
@@ -43,7 +42,7 @@ export const Code = ({ children, className: outerClassName, live, render, schema
   if (noInline === 'false') {
     noInline = false;
   }
-  if (live) {
+  if (live && language === 'jsx') {
     return (
       <LiveProvider code={children.trim()} scope={scopeOnMount} transformCode={transformCode} theme={theme} noInline={noInline}>
         <div sx={styles.previewWrapper}>
@@ -70,7 +69,7 @@ export const Code = ({ children, className: outerClassName, live, render, schema
       </LiveProvider>
     );
   }
-  if (render) {
+  if (render && language === 'jsx') {
     return (
       <LiveProvider code={children} theme={theme} scope={scopeOnMount}>
         <Wrapper content='preview' useScoping={false} showingCode={showingCode}>

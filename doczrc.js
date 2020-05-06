@@ -1,7 +1,7 @@
 /* eslint-disable */
 export default {
   src: './docs',
-  title: 'abc',
+  title: 'Serialize-React',
   typescript: true,
   themesDir: 'theme',
   themeConfig: {
