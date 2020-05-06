@@ -16,6 +16,8 @@ import { useMDXScope } from 'gatsby-plugin-mdx/context.js';
 import { useConfig } from 'docz';
 import Clipboard from 'react-feather/dist/icons/clipboard';
 import CodeIcon from 'react-feather/dist/icons/code';
+import AntdCore from '@react-serialize-component/antd';
+// import WapCore from '@react-serialize-component/wap';
 import { Wrapper } from './Wrapper';
 import { usePrismTheme } from '~utils/theme';
 import * as styles from './styles';
@@ -29,17 +31,17 @@ const transformCode = code => {
 const transformJSONCode = jsonStr => {
   return `
     /**@jsx mdx */
-    return render(Core.render(${jsonStr}));
+    return render(AntdCore.render(${jsonStr}));
   `;
 };
 
-export const Code = ({ children, className: outerClassName, live, schema, noInline = false }) => {
+export const Code = ({ children, className: outerClassName, live, schema, wap = false, noInline = false }) => {
   const [language] = outerClassName ? outerClassName.replace(/language-/, '').split(' ') : ['text'];
   const {
     themeConfig: { showPlaygroundEditor, showLiveError },
   } = useConfig();
   const ScopeContext = useMDXScope();
-  const [scopeOnMount] = React.useState({ ...ScopeContext, mdx });
+  const [scopeOnMount] = React.useState({ ...ScopeContext, mdx, AntdCore });
   const theme = usePrismTheme();
   const [showingCode, setShowingCode] = React.useState(showPlaygroundEditor);
 
@@ -94,3 +96,48 @@ export const Code = ({ children, className: outerClassName, live, schema, noInli
     </Highlight>
   );
 };
+
+/**
+ * render demo
+ * ```jsx live=true noInline=true
+        function Page(props) {
+          const { title, content } = props;
+          return (
+            <div>
+              <p>title: {title}</p>
+              <div>{content}</div>
+            </div>
+          );
+        }
+        class Tpl extends React.PureComponent {
+          createMarkup() {
+            const { tpl } = this.props;
+            return { __html: tpl || '' };
+          }
+
+          render() {
+            return <div dangerouslySetInnerHTML={this.createMarkup()} />;
+          }
+        }
+        const schema = {
+          type: 'page',
+          DataSource: {
+            page: {
+              data: { title: 'test' },
+            },
+          },
+          bindData: {
+            page: true,
+          },
+          title: '${page.title}',
+          content: {
+            type: 'tpl',
+            tpl: '<div>test</div>',
+          },
+        };
+        AntdCore.register('page', Page);
+        AntdCore.register('tpl', Tpl);
+        console.log(AntdCore);
+        render(<div>{AntdCore.render(schema)}</div>);
+      ```
+ */

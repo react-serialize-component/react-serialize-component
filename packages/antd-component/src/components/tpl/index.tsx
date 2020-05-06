@@ -14,7 +14,7 @@ export default class Tpl extends React.PureComponent<TplProps, any> {
   render() {
     return (
       <div>
-        <div dangerouslySetInnerHTML={this.createMarkup()} />;
+        <div dangerouslySetInnerHTML={this.createMarkup()} />
       </div>
     );
   }
