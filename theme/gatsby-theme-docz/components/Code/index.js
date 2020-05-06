@@ -26,8 +26,14 @@ const transformCode = code => {
     ${code}
   `;
 };
+const transformJSONCode = jsonStr => {
+  return `
+    /**@jsx mdx */
+    return render(Core.render(${jsonStr}));
+  `;
+};
 
-export const Code = ({ children, className: outerClassName, live, render, schema, noInline = false }) => {
+export const Code = ({ children, className: outerClassName, live, schema, noInline = false }) => {
   const [language] = outerClassName ? outerClassName.replace(/language-/, '').split(' ') : ['text'];
   const {
     themeConfig: { showPlaygroundEditor, showLiveError },
@@ -42,9 +48,12 @@ export const Code = ({ children, className: outerClassName, live, render, schema
   if (noInline === 'false') {
     noInline = false;
   }
-  if (live && language === 'jsx') {
+  if (schema) {
+    noInline = true;
+  }
+  if ((live && language === 'jsx') || (language === 'json' && schema)) {
     return (
-      <LiveProvider code={children.trim()} scope={scopeOnMount} transformCode={transformCode} theme={theme} noInline={noInline}>
+      <LiveProvider code={children.trim()} scope={scopeOnMount} transformCode={language === 'json' ? transformJSONCode : transformCode} theme={theme} noInline={noInline}>
         <div sx={styles.previewWrapper}>
           <Wrapper content='preview' useScoping={false} showingCode={showingCode}>
             <LivePreview sx={styles.preview} data-testid='live-preview' />
@@ -69,16 +78,6 @@ export const Code = ({ children, className: outerClassName, live, render, schema
       </LiveProvider>
     );
   }
-  if (render && language === 'jsx') {
-    return (
-      <LiveProvider code={children} theme={theme} scope={scopeOnMount}>
-        <Wrapper content='preview' useScoping={false} showingCode={showingCode}>
-          <LivePreview sx={styles.preview} />
-        </Wrapper>
-      </LiveProvider>
-    );
-  }
-
   return (
     <Highlight {...defaultProps} code={children.trim()} language={language} theme={theme}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (

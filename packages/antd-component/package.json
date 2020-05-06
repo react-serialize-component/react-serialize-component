@@ -11,9 +11,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rimraf ./dist && rimraf ./example/dist",
-    "watch": "webpack --config ./scripts/build",
-    "dev": "webpack-dev-server --config ./scripts/build --hot --inline",
-    "release": "cross-env NODE_ENV=prod webpack --config ./scripts/prod",
+    "dev": "node ../../scripts/index.js",
     "autod": "autod"
   },
   "peerDependencies": {

@@ -8,7 +8,7 @@
     "clean": "lerna clean",
     "ii": "npm i && lerna bootstrap",
     "bootstrap": "lerna bootstrap",
-    "build": "cd packages/serialize-core && node ../../scripts/index.js",
+    "dev": "lerna run dev",
     "docz:dev": "docz dev",
     "docz:build": "docz build",
     "docz:serve": "docz build && docz serve",
