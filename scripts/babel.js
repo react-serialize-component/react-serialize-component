@@ -1,5 +1,6 @@
 const { join, extname, relative } = require('path');
 const { existsSync, readFileSync, statSync } = require('fs');
+const prettyError = require('gulp-prettyerror');
 const gulp = require('gulp');
 const gulpTypescript = require('gulp-typescript');
 const gulpLess = require('gulp-less');
@@ -13,12 +14,13 @@ const autoprefixer = require('autoprefixer');
 const felxbugs = require('postcss-flexbugs-fixes');
 const cssnano = require('cssnano');
 const NpmImport = require('less-plugin-npm-import');
+const plumber = require('gulp-plumber');
 // less-plugin-npm-import
 
 function isTsFile(path) {
   return /\.tsx?$/.test(path) && !path.endsWith('.d.ts');
 }
-module.exports = async function (opt = {}) {
+module.exports = async function(opt = {}) {
   const { watch = false, cwd, type = 'cjs', lessOpt = {}, disableTypeCheck = false, entry, runtimeHelpers = false } = opt;
   const srcPath = join(cwd, 'src');
   const typings = join(cwd, 'typings');
@@ -55,9 +57,17 @@ module.exports = async function (opt = {}) {
     const tsProject = gulpTypescript.createProject(tsconfigPath, {});
     const lestOpt = Object.assign({ plugins: [new NpmImport({ prefix: '~' })] }, lessOpt);
     return stream
-      .pipe(gulpIf((f) => !disableTypeCheck && isTsFile(f.path), tsProject()))
-      .pipe(gulpIf((f) => /\.less$/.test(f.path), gulpLess(lestOpt)))
-      .pipe(gulpIf((f) => /\.css$/.test(f.path), postcss([autoprefixer(), felxbugs(), cssnano()])))
+      .pipe(
+        plumber({
+          errorHandler(error) {
+            console.error(error);
+            this.emit('end');
+          },
+        })
+      )
+      .pipe(gulpIf(f => !disableTypeCheck && isTsFile(f.path), tsProject()))
+      .pipe(gulpIf(f => /\.less$/.test(f.path), gulpLess(lestOpt)))
+      .pipe(gulpIf(f => /\.css$/.test(f.path), postcss([autoprefixer(), felxbugs(), cssnano()])))
       .pipe(gulpIf(isTransform, babel(babelConfig)))
       .pipe(gulp.dest(targetPath));
   }
@@ -65,25 +75,23 @@ module.exports = async function (opt = {}) {
     allowEmpty: true,
     base: srcPath,
   });
-  task(stream).on('end', function () {
+  task(stream).on('end', function() {
     console.log(chalk.cyan(`babel build end type: ${type}`));
     if (watch) {
       console.log(chalk.magenta(`start watching type: ${type}`));
       const watcher = gulp.watch(patterns);
-      watcher.on('change', function (fullPath) {
+      watcher.on('change', function(fullPath) {
         const relPath = fullPath.replace(srcPath, '');
         if (!existsSync(fullPath)) return;
         console.log(chalk.cyan(`watcher ${relPath}`));
         task(
-          gulp
-            .src(fullPath, {
-              base: srcPath,
-              allowEmpty: true,
-            })
-            .on('end', function () {
-              console.log(chalk.cyan('rebuild end'));
-            })
-        );
+          gulp.src(fullPath, {
+            base: srcPath,
+            allowEmpty: true,
+          })
+        ).on('end', function() {
+          console.log(chalk.cyan('rebuild end'));
+        });
       });
     }
   });
