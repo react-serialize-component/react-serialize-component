@@ -2,32 +2,51 @@
   "name": "react-serialize-component",
   "version": "0.0.1",
   "description": "write react by json serialize antd component",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "lerna clean",
-    "ii": "npm i && lerna bootstrap",
-    "bootstrap": "lerna bootstrap",
-    "dev": "lerna run dev",
-    "docz:dev": "docz dev",
-    "docz:build": "docz build",
-    "docz:serve": "docz build && docz serve",
-    "lint:style": "stylelint \"packages/*/**/*.less\" --syntax less",
-    "prettier": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
-    "lint": "eslint --ext .js,.jsx \"packages/*/src/**/*.tsx\" \"packages/*/src/**/*.ts\" --cache",
-    "lint:fix": "eslint --fix --ext .js,.jsx \"packages/*/src/**/*.tsx\" \"packages/*/src/**/*.ts\" --cache",
-    "lint-staged": "lint-staged"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "keywords": [
     "json",
     "react",
     "components"
   ],
-  "author": "jianxcao <jianxcao@126.com>",
   "license": "MIT",
+  "author": "jianxcao <jianxcao@126.com>",
+  "main": "index.js",
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "clean": "lerna clean",
+    "dev": "lerna run dev --parallel --no-bail",
+    "docz:build": "docz build",
+    "docz:dev": "docz dev",
+    "docz:serve": "docz build && docz serve",
+    "gh-pages": "node scripts/gh-pages",
+    "ii": "npm i && lerna bootstrap",
+    "lint": "eslint --ext .js,.jsx \"packages/*/src/**/*.tsx\" \"packages/*/src/**/*.ts\" --cache",
+    "lint-staged": "lint-staged",
+    "lint:fix": "eslint --fix --ext .js,.jsx \"packages/*/src/**/*.tsx\" \"packages/*/src/**/*.ts\" --cache",
+    "lint:style": "stylelint \"packages/*/**/*.less\" --syntax less",
+    "prettier": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "sort": "npx sort-package-json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.less": [
+      "npm run lint:style"
+    ],
+    "**/*.{js,jsx,ts,tsx}": [
+      "npm run lint:fix"
+    ],
+    "**/*.{js,ts,tsx,json,jsx,less}": [
+      "npm run prettier"
+    ]
+  },
+  "dependencies": {
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
+  },
   "devDependencies": {
     "@babel/core": "7.4.5",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
@@ -70,6 +89,7 @@
     "eslint-config-airbnb-typescript-prettier": "^2.1.1",
     "eslint-plugin-react-hooks": "^3.0.0",
     "gatsby-plugin-mdx": "^1.1.9",
+    "gh-pages": "^2.2.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-if": "^3.0.0",
@@ -104,24 +124,7 @@
   "engines": {
     "node": ">=8.0.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint-staged"
-    }
-  },
-  "lint-staged": {
-    "**/*.{js,ts,tsx,json,jsx,less}": [
-      "npm run prettier"
-    ],
-    "**/*.{js,jsx,ts,tsx}": [
-      "npm run lint:fix"
-    ],
-    "**/*.less": [
-      "npm run lint:style"
-    ]
-  },
-  "dependencies": {
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+  "publishConfig": {
+    "access": "public"
   }
 }
