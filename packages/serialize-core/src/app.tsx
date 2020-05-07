@@ -245,11 +245,10 @@ const app: App = {
     keys.forEach(key => {
       const one = models.find(model => model.namespace === key);
       // 当前model不存在就直接放进去, 否则替换
-      if (!one) {
-        dva.model(dataModels[key]);
-      } else {
-        dva.replaceModel(dataModels[key]);
+      if (one) {
+        dva.unmodel(one.namespace);
       }
+      dva.model(dataModels[key]);
     });
   },
   /**
