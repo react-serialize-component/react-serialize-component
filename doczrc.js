@@ -6,6 +6,7 @@ export default {
   typescript: true,
   themesDir: 'theme',
   themeConfig: {
-    initialColorMode: 'dark',
+    // initialColorMode: 'dark',
+    showDarkModeSwitch: true,
   },
 };

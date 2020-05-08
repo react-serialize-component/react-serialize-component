@@ -7,7 +7,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint react/jsx-key: 0 */
 import Highlight, { defaultProps } from 'prism-react-renderer';
-import { Styled, jsx } from 'theme-ui';
+import { Styled, jsx, useThemeUI, ThemeProvider } from 'theme-ui';
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
 import { mdx } from '@mdx-js/react';
 import copy from 'copy-text-to-clipboard';
@@ -18,6 +18,7 @@ import Clipboard from 'react-feather/dist/icons/clipboard';
 import CodeIcon from 'react-feather/dist/icons/code';
 import AntdCore from '@react-serialize-component/antd';
 // import WapCore from '@react-serialize-component/wap';
+// import codeTheme from 'prism-react-renderer/themes/nightOwl';
 import { Wrapper } from './Wrapper';
 import { usePrismTheme } from '~utils/theme';
 import * as styles from './styles';
@@ -44,7 +45,8 @@ export const Code = ({ children, className: outerClassName, live, schema, wap = 
   const [scopeOnMount] = React.useState({ ...ScopeContext, mdx, AntdCore });
   const theme = usePrismTheme();
   const [showingCode, setShowingCode] = React.useState(showPlaygroundEditor);
-
+  // 当前颜色模式
+  // const { colorMode } = useThemeUI();
   const copyCode = () => copy(children.trim());
   const toggleCode = () => setShowingCode(s => !s);
   if (noInline === 'false') {
@@ -53,6 +55,7 @@ export const Code = ({ children, className: outerClassName, live, schema, wap = 
   if (schema) {
     noInline = true;
   }
+  // 强制code颜色为黑色
   if ((live && language === 'jsx') || (language === 'json' && schema)) {
     return (
       <LiveProvider code={children.trim()} scope={scopeOnMount} transformCode={language === 'json' ? transformJSONCode : transformCode} theme={theme} noInline={noInline}>

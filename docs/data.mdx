@@ -2,19 +2,56 @@
 
 ```json schema=true
 {
-  "type": "page",
+  "type": "tpl",
   "DataSource": {
     "page": {
-      "data": { "title": "test" }
+      "data": { "title": "test" },
+      "list": "http://jianxcao.test/test1"
     }
   },
+  "onInit": "${page.fetchList()}",
   "bindData": {
     "page": true
   },
-  "title": "${page.title}",
+  "tpl": "<pre>${page|json}</pre>"
+}
+```
+
+```json schema=true
+{
+  "type": "tpl",
+  "DataSource": {
+    "page": {
+      "data": { "title": "test" },
+      "list": {
+        "method": "post",
+        "url": "http://jianxcao.test/test1",
+        "params": {
+          "a": 1,
+          "b": 2
+        }
+      }
+    }
+  },
+  "onInit": "${page.fetchList()}",
+  "bindData": {
+    "page": true
+  },
+  "tpl": "<pre>${page|json}</pre>"
+}
+```
+
+```json schema=true
+{
+  "type": "page",
+  "bindData": {
+    "page": true
+  },
   "content": {
-    "type": "tpl",
-    "tpl": "<div>test</div>"
+    "$type": "button",
+    "type": "danger",
+    "onClick": "${alert('test')}",
+    "children": "test button"
   }
 }
 ```

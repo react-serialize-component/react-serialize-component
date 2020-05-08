@@ -62,6 +62,7 @@ axios.interceptors.request.use(
     } catch (e) {
       console.error(e);
     }
+    console.log(config);
     const params = config.params || {};
     const headers = config.headers || {};
     params._t = +new Date();
