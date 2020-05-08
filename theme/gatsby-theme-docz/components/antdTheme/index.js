@@ -3,6 +3,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import React from 'react';
 import css from '!css-loader!antd/dist/antd.css';
+import darkCss from '!css-loader!./antd.dark.css';
 
 export default class AntdTheme extends React.PureComponent {
   static defaultProps = {
@@ -10,19 +11,24 @@ export default class AntdTheme extends React.PureComponent {
   };
 
   componentDidMount() {
-    const { colorMode } = this.props;
-    let antdStyle = document.querySelector('#antdStyle');
-    if (!antdStyle) {
-      antdStyle = document.createElement('style');
-      antdStyle.id = antdStyle;
-    }
-    antdStyle.innerText = css.toString();
-    document.head.appendChild(antdStyle);
+    this.changeColor();
   }
 
   componentDidUpdate() {
+    this.changeColor();
+  }
+
+  changeColor() {
     const { colorMode } = this.props;
-    console.log('colorMode', colorMode);
+    let antdStyle = document.head.querySelector('#antdStyle');
+    if (antdStyle) {
+      document.head.removeChild(antdStyle);
+    }
+    antdStyle = document.createElement('style');
+    antdStyle.id = 'antdStyle';
+    this.antdStyle = antdStyle;
+    antdStyle.innerText = colorMode === 'light' ? css.toString() : darkCss.toString();
+    document.head.appendChild(antdStyle);
   }
 
   render() {
