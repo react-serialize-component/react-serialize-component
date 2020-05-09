@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /** @jsx jsx */
 
 /* eslint-disable react/button-has-type */

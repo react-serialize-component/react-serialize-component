@@ -13,6 +13,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "clean": "lerna clean",
+    "clean-cache": "gatsby clean",
     "dev": "lerna run dev --parallel --no-bail",
     "docz:build": "docz build",
     "docz:dev": "docz dev",

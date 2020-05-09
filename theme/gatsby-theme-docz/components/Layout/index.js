@@ -7,12 +7,11 @@
 import { useRef, useState } from 'react';
 import { jsx, Layout as BaseLayout, Main, useThemeUI } from 'theme-ui';
 import { Global } from '@emotion/core';
-import '@mock';
 import global from '~theme/global';
 import { Header } from '~components/Header';
 import { Sidebar } from '~components/Sidebar';
 import { MainContainer } from '~components/MainContainer';
-import AntdTheme from '../antdTheme';
+import AntdTheme from '~components/antdTheme';
 import * as styles from './styles';
 
 export const Layout = ({ children }) => {

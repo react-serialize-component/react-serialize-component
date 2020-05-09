@@ -18,6 +18,13 @@ export default class AntdTheme extends React.PureComponent {
     this.changeColor();
   }
 
+  componentWillUnmount() {
+    const antdStyle = document.head.querySelector('#antdStyle');
+    if (antdStyle) {
+      document.head.removeChild(antdStyle);
+    }
+  }
+
   changeColor() {
     const { colorMode } = this.props;
     let antdStyle = document.head.querySelector('#antdStyle');
