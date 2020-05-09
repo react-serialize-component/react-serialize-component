@@ -1,0 +1,37 @@
+---
+name: Divider
+menu: Components
+---
+
+
+### 分割线
+
+| 参数        | 说明                       | 类型                          | 默认值       | 
+| ----------- | -------------------------- | ----------------------------- | ------------
+| className   | 分割线样式类               | string                        | -            |
+| dashed      | 是否虚线                   | boolean                       | false        |
+| orientation | 分割线标题的位置           | `left` \| `right` \| `center` | `center`     |
+| style       | 分割线样式对象             | CSSProperties                 | -            |
+| type        | 水平还是垂直类型           | `horizontal` \| `vertical`    | `horizontal` |
+
+
+
+
+
+```json schema=true
+{
+  "type": "page",
+  "children": [{
+    "$type": "button",
+    "children": "button1"
+  }, {
+    "$type": "divider",
+    "children": "优雅的分割线",
+    // 虚线
+    "dashed": true,
+  },{
+    "$type": "button",
+    "children": "button2"
+  }]
+}
+```
