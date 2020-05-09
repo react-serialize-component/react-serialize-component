@@ -1,6 +1,5 @@
 const { join, extname, relative } = require('path');
 const { existsSync, readFileSync, statSync } = require('fs');
-const prettyError = require('gulp-prettyerror');
 const gulp = require('gulp');
 const gulpTypescript = require('gulp-typescript');
 const gulpLess = require('gulp-less');
