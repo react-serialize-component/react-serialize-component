@@ -17,5 +17,7 @@ module.exports = {
   runtimeHelpers: false,
   babel: ['cjs', 'esm'],
   // less文件的配置
-  lessOpt: {},
+  lessOpt: {
+    javascriptEnabled: true,
+  },
 };

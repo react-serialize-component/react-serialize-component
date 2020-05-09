@@ -1,4 +1,3 @@
-import './index.less';
 import setEnv from './env';
 
 export { setEnv };

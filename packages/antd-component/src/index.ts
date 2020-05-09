@@ -1,5 +1,6 @@
 import Core from '@react-serialize-component/core';
 import './env';
+// import './index.less';
 import { Button, Icon, Divider, Row, Col } from 'antd';
 import { PlainObject } from '@react-serialize-component/core/lib/types';
 import Tpl from './components/tpl';
