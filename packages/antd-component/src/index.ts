@@ -6,6 +6,7 @@ import { PlainObject } from '@react-serialize-component/core/lib/types';
 import Tpl from './components/tpl';
 import Page from './components/page';
 import Collapse from './components/collapse';
+import Tabs from './components/tabs';
 
 export default Core;
 export { Tpl };
@@ -19,6 +20,7 @@ const components: PlainObject = {
   divider: Divider,
   row: Row,
   col: Col,
+  tabs: Tabs,
 };
 
 Object.keys(components).forEach(key => Core.register(key, components[key]));
