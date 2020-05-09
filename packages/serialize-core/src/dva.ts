@@ -26,9 +26,10 @@ export type dvaIns = DvaInstance & {
 export interface PayloadAction extends Action {
   payload?: PlainObject | null | undefined;
 }
+// eslint-disable-next-line no-undef
+const win: any = typeof window !== `undefined` ? window : globalThis;
+
 export default (opt: dvaCoreOpt = {}, createOpt?: CreateOpt) => {
-  // eslint-disable-next-line no-undef
-  const win: any = globalThis;
   if (win.dva) {
     return win.dva;
   }

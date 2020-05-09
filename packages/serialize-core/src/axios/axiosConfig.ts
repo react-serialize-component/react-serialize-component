@@ -10,8 +10,6 @@ interface AxiosConfig extends AxiosRequestConfig {
 const { CancelToken } = axios;
 axios.defaults.timeout = 30000;
 
-// eslint-disable-next-line no-undef
-(globalThis as any).axios = axios;
 const lockUrl: PlainObject = {};
 
 // 后到优先策略：取消前一个未完成的ajax请求，然后发送新的ajax请求
