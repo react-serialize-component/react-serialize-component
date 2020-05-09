@@ -13,6 +13,8 @@ import template from './art';
 import { isEventString, anyChanged, shallowEqualObjects } from './utils';
 import { env as defaultEnv } from './env';
 
+const excludeProps: Array<string> = ['style', 'className', 'gutter', 'justify', 'flex'];
+
 export const componentSymobol = Symbol('schemaComponent');
 export const preDataSourcesSymobol = Symbol('preDataSources');
 interface InjectConnect {
@@ -124,15 +126,19 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
         ...data,
       });
     }
-    if (t === 'object') {
-      return this.parseObjectProps(prop);
-    }
     if (Array.isArray(prop)) {
       // 数组的情况
       return (prop as Array<any>).map((one: any, index) => {
         const res = this.parseSchemaProps(one, null);
-        return React.isValidElement(res) ? <React.Fragment key={index}>{res}</React.Fragment> : res;
+        return <React.Fragment key={index}>{res}</React.Fragment>;
       });
+    }
+    if (t === 'object') {
+      // 排除的key不在编译
+      if (excludeProps.some(exkey => exkey === key)) {
+        return prop;
+      }
+      return this.parseObjectProps(prop);
     }
     // 函数，数字，null， undefined都不动
     return prop;
@@ -140,6 +146,7 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
 
   // eslint-disable-next-line class-methods-use-this
   parseObjectProps(prop: PlainObject): any {
+    console.log(prop);
     if (isLikeSchemaNode(prop)) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       return app.initComponent(prop as SchemaNode);
@@ -151,6 +158,9 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
         const keys = Object.keys(one);
         keys.forEach(key => {
           const childProp = one[key];
+          if (excludeProps.some(exkey => exkey === key)) {
+            return;
+          }
           if (typeof childProp === 'object') {
             if (isLikeSchemaNode(childProp)) {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
