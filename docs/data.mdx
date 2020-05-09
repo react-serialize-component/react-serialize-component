@@ -5,7 +5,9 @@
   "type": "tpl",
   "DataSource": {
     "page": {
-      "data": { "title": "test" },
+      "data": { 
+        "title": "test",
+      },
       "list": "http://jianxcao.test/test1"
     }
   },
@@ -22,14 +24,17 @@
   "type": "tpl",
   "DataSource": {
     "page": {
-      "data": { "title": "test" },
+      "data": {
+        "title": "test",
+        "params": {
+          "pageSize": 10,
+          "currentPage": 1,
+        }
+      },
       "list": {
         "method": "post",
         "url": "http://jianxcao.test/test1",
-        "params": {
-          "a": 1,
-          "b": 2
-        }
+        "params": "${page.params}"
       }
     }
   },

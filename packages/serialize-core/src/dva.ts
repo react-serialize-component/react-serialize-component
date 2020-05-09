@@ -78,10 +78,18 @@ export function parseDataSource(dataSources: DataSources): Models {
           // 一个字符串模板类似 http://www.baidu.com/${abc}
           if (isTplStr(cfg.url)) {
             cfg.url = template.compile(cfg.url)({
-              ...(action.payload || {}),
-              state,
+              // ...(action.payload || {}),
+              ...state,
               payload: action.payload,
-              ...(state[namespace] || {}),
+              // ...(state[namespace] || {}),
+            });
+          }
+          if (isTplStr(cfg.params)) {
+            cfg.params = template.compile(cfg.params)({
+              // ...(action.payload || {}),
+              ...state,
+              payload: action.payload,
+              // ...(state[namespace] || {}),
             });
           }
           effectRes = await axios(cfg);

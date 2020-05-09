@@ -124,9 +124,8 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
         ...data,
       });
     }
-    if (t === 'object' && isLikeSchemaNode(prop)) {
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      return app.initComponent(prop as SchemaNode);
+    if (t === 'object') {
+      return this.parseObjectProps(prop);
     }
     if (Array.isArray(prop)) {
       // 数组的情况
@@ -136,6 +135,33 @@ class SchemaRender extends React.Component<SchemaRenderProps, any> {
       });
     }
     // 函数，数字，null， undefined都不动
+    return prop;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  parseObjectProps(prop: PlainObject): any {
+    if (isLikeSchemaNode(prop)) {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return app.initComponent(prop as SchemaNode);
+    }
+    const current = [prop];
+    while (current.length) {
+      const one = current.pop();
+      if (one) {
+        const keys = Object.keys(one);
+        keys.forEach(key => {
+          const childProp = one[key];
+          if (typeof childProp === 'object') {
+            if (isLikeSchemaNode(childProp)) {
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              one[key] = app.initComponent(childProp as SchemaNode);
+            } else {
+              current.push(childProp);
+            }
+          }
+        });
+      }
+    }
     return prop;
   }
 
