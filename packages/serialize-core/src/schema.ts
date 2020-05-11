@@ -1,7 +1,7 @@
 import React from 'react';
 import { AxiosRequestConfig } from 'axios';
 import isPlainObject from 'lodash/isPlainObject';
-import { templateString, templateFun, Payload, AnyFunc, PlainObject } from './types';
+import { templateString, templateFun, Payload, AnyFunc, PlainObject, AxiosConfig } from './types';
 import { anyChanged } from './utils';
 
 // eslint-disable-next-line max-len
@@ -13,7 +13,7 @@ export interface DataSource {
     [propName: string]: any;
   };
   // 所有获取数据的方法
-  [propName: string]: AxiosRequestConfig | any;
+  [propName: string]: AxiosConfig | any;
 }
 
 export interface DataSources {

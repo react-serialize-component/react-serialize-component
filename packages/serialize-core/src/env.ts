@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios';
-import { PlainObject, Env } from './types';
+import { PlainObject, Env, AxiosConfig } from './types';
 
 export const env: Env = {
   proxy: {
@@ -26,14 +26,14 @@ export default function setEnv(opt: PlainObject) {
   Object.assign(env, opt);
 }
 
-export function detailReq(config: AxiosRequestConfig) {
+export function detailReq(config: AxiosConfig): AxiosConfig {
   const url: string = config.url || '';
   const { proxy: { request = {} } = {} } = env;
   const keys = Object.keys(request);
   return keys.reduce((result, cur) => {
     const reg = new RegExp(cur, 'g');
     if (reg.test(url)) {
-      result = request[cur](config) || result;
+      result = (request[cur](config) || result) as AxiosConfig;
     }
     return result;
   }, config);

@@ -1,3 +1,5 @@
+import { AxiosRequestConfig } from 'axios';
+
 export interface PlainObject {
   [propsName: string]: any;
 }
@@ -37,4 +39,13 @@ export interface Env {
   alert: (msg: string) => void;
   confirm: (msg: string, title?: string) => Promise<boolean>;
   [propName: string]: any;
+}
+
+export interface AxiosConfig extends AxiosRequestConfig {
+  // 请求字段的配置
+  data?: PlainObject;
+  // 请求或者相应适配
+  requestAdapter?: AnyFunc;
+  responseAdapter?: AnyFunc;
+  errCode: PlainObject;
 }

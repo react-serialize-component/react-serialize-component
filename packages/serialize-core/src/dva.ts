@@ -84,8 +84,18 @@ export function parseDataSource(dataSources: DataSources): Models {
               // ...(state[namespace] || {}),
             });
           }
+          // 主要是get请求
           if (isTplStr(cfg.params)) {
             cfg.params = template.compile(cfg.params)({
+              // ...(action.payload || {}),
+              ...state,
+              payload: action.payload,
+              // ...(state[namespace] || {}),
+            });
+          }
+          // 主要是post请求
+          if (isTplStr(cfg.data)) {
+            cfg.data = template.compile(cfg.data)({
               // ...(action.payload || {}),
               ...state,
               payload: action.payload,

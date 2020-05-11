@@ -1,12 +1,8 @@
-import axios, { AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
-import { PlainObject, Payload } from '../types';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { PlainObject, Payload, AxiosConfig } from '../types';
 import { detailReq, detailRes } from '../env';
 import './axiosStatus';
 // const urlTest = /(?:https*:)*\/\/([^/]+)/;
-interface AxiosConfig extends AxiosRequestConfig {
-  errCode: PlainObject;
-}
-
 const { CancelToken } = axios;
 axios.defaults.timeout = 30000;
 
@@ -54,9 +50,12 @@ const detailLockKey = (config: any, promise: Promise<any>) => {
 
 // 添加时间戳
 axios.interceptors.request.use(
-  function req(config) {
+  function req(config: AxiosConfig) {
     try {
       config = detailReq(config);
+      if (config.requestAdapter && typeof config.requestAdapter === 'function') {
+        config = config.requestAdapter(config);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -79,10 +78,14 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   function req(res: AxiosResponse<Payload>): any {
     const { errCode } = axios.defaults as AxiosConfig;
+    const config: AxiosConfig = res.config as AxiosConfig;
     let { data } = res;
     const { status } = res;
     try {
       data = detailRes(res.config.url || '', data);
+      if (config.responseAdapter && typeof config.responseAdapter === 'function') {
+        data = config.responseAdapter(data) || data;
+      }
     } catch (error) {
       console.error(error);
     }
