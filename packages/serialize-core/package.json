@@ -21,7 +21,7 @@
     "dva-loading": "^3.0.20",
     "fast-memoize": "^2.5.2",
     "hoist-non-react-statics": "^3.3.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "react-hot-loader": "^4.12.20",
     "react-redux": "^7.0.2",
