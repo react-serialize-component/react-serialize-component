@@ -15,7 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "art-template": "^4.13.2",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "deepmerge": "^4.2.2",
     "dva-core": "^2.0.2",
     "dva-loading": "^3.0.20",
