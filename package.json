@@ -91,7 +91,7 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb-typescript-prettier": "^2.1.1",
     "eslint-plugin-react-hooks": "^3.0.0",
-    "gatsby-plugin-mdx": "^1.1.9",
+    "gatsby-plugin-mdx": "^2.14.1",
     "gh-pages": "^2.2.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
